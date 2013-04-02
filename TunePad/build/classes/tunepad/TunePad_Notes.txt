@@ -1,0 +1,72 @@
+6:34 AM 5/12/2011
+
+so what are the options?
+invisible is the root, and holds the scrapyard of free objects.
+
+selected is special.
+is the main played special?  or the same as selected?
+
+or right-click, 'set as main'
+
+in either case, as soon as we tear off a thing, it is added to the invisiroot.
+
+then you can move it around ('selected' must be a global reference).  invisiroot redraws on all changes.
+
+for now can make global selected
+
+so main things to make:
+
+* drag playable within vine.
+
+* rip playable and relocate.
+  if drop in space, leave in space and support?  or undo back to prev state? 
+  for this, first we need to be able to dynamically remove and insert.  
+    and for this, copy and insert first.  
+
+* highlighted play animation, starting with cursor line.
+
+
+so for easy:
+* cursor line
+* xerox and insert on drop.
+
+
+long picture, will want repeat box.
+
+is xerox supported for all playables?
+
+rip copy paste
+
+ok we need a REAL hit test that gets containers.  guess you return the innermost container you hit?  main deal is when a container and leaf overlap, ignore the leaf.
+
+general issue, when two leaves overlap, return both?  or assume they are plotted in layered order and return the last to plot (=frontmost).  yeah that's normal. plot in opposite order of search, plot frontmost last.
+
+ok, so we need an is-container test.  maybe every container has separate lists, for containers and for leaves?  just as much trouble to maintain, still need iscontainer to add to leaves.  
+
+interface IContainer?  anyway, all playables have an Is_Container flag.  or Can_Receive() flag.  who can receive?  vines yes.  repeaters too, but doesn't it knock out the prev contents?
+
+Can_Receive_Drop() is what we want to find.  but we have to explore containers to find it, not explore leaves.  so can a leaf just say null, I am not a container?
+
+you must traverse everything that overlaps your target point, ok?  is that good?  and the first one to return anything that Can_Receive_Drop() ends your local search.
+
+
+so next?
+we get the container.  how to insert?
+container.insert is fine.  BUT, you can insert in many places.  just inserting isn't enough.
+
+that means finding a second time from x,y to an object.  but you need x,y anyway to give it coords *within* the object.  
+
+container_insert(double x,double y,Playable_Drawable NewChild)
+
+
+
+
+
+
+
+
+
+
+
+
+
