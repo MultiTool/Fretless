@@ -1,6 +1,0 @@
-tunepad.Note_List_Base$Note_Box
-tunepad.Chorus_Vine
-tunepad.Note_Box_List$byEndTime
-tunepad.Note_Box_List
-tunepad.Note_List_Base
-tunepad.Note_List_Base$byStartTime
