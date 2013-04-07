@@ -1,5 +1,6 @@
 # Compiled source #
 ###################
+*.jar
 *.com
 *.class
 *.dll
