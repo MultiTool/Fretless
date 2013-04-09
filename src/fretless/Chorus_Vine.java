@@ -301,9 +301,6 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
   /* ************************************************************************************************************************ */
   public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
     /* Chorus_Vine  */
-    if (this == Stack.Exclude) {
-      return false;
-    }
     TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
     Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
     double Line_Radius = 5.0;
@@ -583,10 +580,6 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
     /* ************************************************************************************************************************ */
     public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
       /* Note_Box  */
-      /* look for any contact with the container hits of any children I might own. */
-      if (this == Stack.Exclude) {
-        return false;
-      }
       TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
       Boolean found = this.My_Note.Hit_Test_Container(mydc, Xloc, Yloc, Depth + 1, Stack);
       if (found) {

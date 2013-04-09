@@ -24,21 +24,21 @@ import javax.swing.*;
 import fretless.TunePadLogic.*;
 
 /*
-import javax.media.opengl.GL;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.glu.GLU;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import javax.media.opengl.GLCanvas;
-import java.awt.Frame;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import com.sun.opengl.util.Animator;
+ import javax.media.opengl.GL;
+ import javax.media.opengl.GLEventListener;
+ import javax.media.opengl.GLAutoDrawable;
+ import javax.media.opengl.glu.GLU;
+ import java.awt.event.KeyEvent;
+ import java.awt.event.KeyListener;
+ import javax.media.opengl.GLCanvas;
+ import java.awt.Frame;
+ import java.awt.event.WindowAdapter;
+ import java.awt.event.WindowEvent;
+ import com.sun.opengl.util.Animator;
  */
 /**
- *
- * @author JCAtkeson
+
+ @author JCAtkeson
  */
 /* *************************************************************************************************** */
 public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
@@ -86,13 +86,13 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
       }
     });
     /*
-    MouseListener ml = new MouseAdapter(){
-    public void mousePressed(MouseEvent e){
-    JComponent jc = (JComponent)e.getSource();
-    TransferHandler th = jc.getTransferHandler();
-    th.exportAsDrag(jc, e, TransferHandler.COPY);
-    }
-    };
+     MouseListener ml = new MouseAdapter(){
+     public void mousePressed(MouseEvent e){
+     JComponent jc = (JComponent)e.getSource();
+     TransferHandler th = jc.getTransferHandler();
+     th.exportAsDrag(jc, e, TransferHandler.COPY);
+     }
+     };
     
      */
     this.addComponentListener(new ComponentListener() {
@@ -137,15 +137,15 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
         TunePadLogic.Render_Context rc = new TunePadLogic.Render_Context();
         Stack.Create_Audio_Transform(rc);
         /*
-        what we really want here is to create the transform of the selection context box.
-        but we must also update that transform continuously as we drag.
-        also as we drag, we must do a continuous container search - other problem.
+         what we really want here is to create the transform of the selection context box.
+         but we must also update that transform continuously as we drag.
+         also as we drag, we must do a continuous container search - other problem.
         
-        when dropping, if we hit a container then join it however.
+         when dropping, if we hit a container then join it however.
         
-        if dropping in space?  either revert the whole structure, or drop in space to invisible root.  in that case we'd just throw the selected box into the root too.  maybe clone it first.
+         if dropping in space?  either revert the whole structure, or drop in space to invisible root.  in that case we'd just throw the selected box into the root too.  maybe clone it first.
         
-        and yes, we need clone for all playables.  
+         and yes, we need clone for all playables.  
         
          */
       }
@@ -195,16 +195,16 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
         }
 
         Target_Stack.Clear();
-        Target_Stack.Exclude = Stack.End();/* do not insert into self */
         hit = rootplay.Hit_Test_Container(Main_DC, mousex, mousey, 0, Target_Stack);
         if (hit) {
-          boolean nop = true;
           JComponent jc = (JComponent) evt.getSource();
           TransferHandler th = jc.getTransferHandler();
           // th.exportAsDrag(jc, evt, TransferHandler.COPY);
           if (Target_Stack != null) {
             if (Target_Stack.Stack_Depth > 0) {// if something has been hit
-              nop = true;
+              if (Target_Stack.Find_Up(drifter) != null) {/* do not insert into self */
+                Target_Stack.Clear();// If the object is dragged into a sub-member of itself, then the target is disqualified. No circular references.
+              }
               /* just wanna animate */
             }
           }
@@ -285,41 +285,47 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
       // th.exportAsDrag(jc, evt, TransferHandler.COPY);
       if (Target_Stack != null) {
         if (Target_Stack.Stack_Depth > 0) {// if something has been hit
-          boolean nop = true;
           /* drop it here */
           Playable_Drawable End = Target_Stack.End();
           DropBox Grabber = Target_Stack.DropBox_Found;
 
           /*
-          we want the coords local to the target?  internal coords?  
+           we want the coords local to the target?  internal coords?  
           
-          and once again, do we really want to have multiple parents for one node?
-          get rid of that, and everyone has their own coords, and stateful rendering becomes easy.
+           and once again, do we really want to have multiple parents for one node?
+           get rid of that, and everyone has their own coords, and stateful rendering becomes easy.
           
-          we need the 
+           we need the 
           
            */
-          Render_Context rc = new Render_Context();
-          Target_Stack.Create_Audio_Transform(rc);/* make transform between target container and screen. */
 
-          Drawing_Context dc = new Drawing_Context(Main_DC);
-          Target_Stack.Create_Drawing_Transform(dc);/* make transform between target container and screen. */
+          if (false) {
+            Render_Context rc = new Render_Context();
+            Target_Stack.Create_Audio_Transform(rc);/* make transform between target container and screen. */
 
-          Point2D.Double innerpnt;
-          innerpnt = dc.From_Screen(evt.getX(), evt.getY());
+            Drawing_Context dc = new Drawing_Context(Main_DC);
+            Target_Stack.Create_Drawing_Transform(dc);/* make transform between target container and screen. */
 
-          Grabber.Container_Insert(Selected, innerpnt.x, innerpnt.y);
+            Point2D.Double innerpnt;
+            innerpnt = dc.From_Screen(evt.getX(), evt.getY());
+
+            Grabber.Container_Insert(Selected, innerpnt.x, innerpnt.y);
+          } else {
+            Grabber.Container_Insert(Selected, 0, 0);
+          }
         }
       }
       Selected = null;
       Selected_Context.Content = null;
     }
-    Target_Stack.Clear();
+    if (Target_Stack != null) {
+      Target_Stack.Clear();
+    }
     Stack.Clear();
     rootplay.Hit_Test_Stack(Main_DC, xloc, yloc, 0, Stack);
 
     /*
-    mow we need a way to render the audio of a stack leaf.
+     mow we need a way to render the audio of a stack leaf.
      * first go down to the end of the stack, adding up the render_context values.  rc will include clipping.
      *
      * then, at the bottom, generate the wave.  then just return it!  so going to the end of the stack is just a loop.  no recursion.
@@ -340,6 +346,7 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
      *
      *
      */
+    Plot_Tree(GlobalGraphics);
     double pitch = pnt.y;// (hgt - evt.getY()) / hgt;
     double octave_offset = 7.0;
     double fo_220 = 7.7813597135246608;// - octave_offset;

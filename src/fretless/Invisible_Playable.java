@@ -58,9 +58,6 @@ public class Invisible_Playable extends TunePadLogic.Dummy_Playable {
   @Override
   public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
     /* Invisible_Playable  */
-    if (this == Stack.Exclude) {
-      return false;
-    }
     TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
     Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
     Boolean found = false;

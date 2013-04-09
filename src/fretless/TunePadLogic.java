@@ -23,8 +23,8 @@ import java.awt.*;
 import java.awt.geom.*;
 
 /**
- *
- * @author JCAtkeson
+
+ @author JCAtkeson
  */
 
 /* ********************************************************************************************************************************************************* */
@@ -165,13 +165,13 @@ public class TunePadLogic {
 
       //Trans_X = Absolute_X; Trans_Y = Absolute_Y;
       /*
-      Scale_X = Child_Frame.Scale_X;
-      Scale_Y = Fresh_Parent.Scale_Y;
-      Trans_X = Fresh_Parent.Trans_X;
-      Trans_Y = Fresh_Parent.Trans_Y;
-      Clip_Start = Fresh_Parent.Clip_Start;
-      Clip_End = Fresh_Parent.Clip_End;
-      Highlight = Fresh_Parent.Highlight;
+       Scale_X = Child_Frame.Scale_X;
+       Scale_Y = Fresh_Parent.Scale_Y;
+       Trans_X = Fresh_Parent.Trans_X;
+       Trans_Y = Fresh_Parent.Trans_Y;
+       Clip_Start = Fresh_Parent.Clip_Start;
+       Clip_End = Fresh_Parent.Clip_End;
+       Highlight = Fresh_Parent.Highlight;
        */
     }
     public Point2D.Double To_Screen(double xraw, double yraw) {
@@ -215,10 +215,10 @@ public class TunePadLogic {
       return cpoint;
     }
     /*
-    vocptype volcp.create(time, level)
-    volcp.remove(vocptype cp) // or delete
-    vocptype volcp.Hit_Test(time)
-    volcp.move(vocptype cp, newtime)
+     vocptype volcp.create(time, level)
+     volcp.remove(vocptype cp) // or delete
+     vocptype volcp.Hit_Test(time)
+     volcp.move(vocptype cp, newtime)
      */
   }
   /* ************************************************************************************************************************ */
@@ -270,7 +270,7 @@ public class TunePadLogic {
     }
     public Playable Container;
     /*
-    this is where we might attach exactly which line we hit IF we hit a container.
+     this is where we might attach exactly which line we hit IF we hit a container.
      * does this mean that hitting a line means we hit the container?  then the whole vine may move if we drag one line.
      * could just add a flag that says 'no lines' or yes lines, to try out later.
      * but, if we use this to find a drag destination, it might return true if we hit a non-container (leaf)
@@ -279,21 +279,32 @@ public class TunePadLogic {
      *
      *
      */
+    public Playable Find_Up(Playable Target) {
+      Playable retval = null;
+      int Last_Depth = Stack_Depth - 1;
+      for (int depth = Last_Depth; depth >= 0; depth--) {
+        Playable Nivel = this.Path[depth];
+        if (Nivel == Target) {
+          retval = Nivel;
+          break;
+        }
+      }
+      return retval;
+    }
   }
   /* ************************************************************************************************************************ */
   public class Target_Container_Stack extends Hit_Stack {
-    public Playable Exclude;
     public DropBox DropBox_Found;
     /*
-    nothing here!  
-    everything is a container except leaves right?
-    so either we have a test 
+     nothing here!  
+     everything is a container except leaves right?
+     so either we have a test 
     
-    leaves can be siblings to containers.  we just want to ignore all leaves.  can have a test for that.  IsContainer()?
+     leaves can be siblings to containers.  we just want to ignore all leaves.  can have a test for that.  IsContainer()?
     
-    oh right, containers return any of their children I hit.  generic.
+     oh right, containers return any of their children I hit.  generic.
     
-    point being, what matters if I am a possible destination for the drifter.  not just a container, but an open one.
+     point being, what matters if I am a possible destination for the drifter.  not just a container, but an open one.
     
      */
   }
@@ -350,22 +361,28 @@ public class TunePadLogic {
       return false;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
       return false;/* Dummy_Playable is a leaf, so always returns false. */
     }
+    @Override
     public void Set_Octave(double Fresh_Octave) {
       Boolean snargle = true;
     }
+    @Override
     public void Set_Frequency(double Fresh_Frequency) {
       Boolean snargle = true;
     }
     double Start_Time_Val;
+    @Override
     public/* virtual */ double Start_Time_G() {
       return Start_Time_Val;
     }
+    @Override
     public/* virtual */ void Start_Time_S(double value) {
       Start_Time_Val = value;
     }
+    @Override
     public double End_Time_G() {
       return Start_Time_Val + this.Duration_G();
     }
@@ -379,13 +396,16 @@ public class TunePadLogic {
     public void Duration_S(double value) {
       Duration_Val = value;
     }
+    @Override
     public double Get_Pitch() {
       return 1.0;
     }
+    @Override
     public/* virtual */ double Get_Max_Amplitude() {
       return 1.0;
     }
     double Loudness_Value_0, Loudness_Value_1;
+    @Override
     public double Loudness_G(double percent) {
       if (percent < 0.5) {
         return Loudness_Value_0;
@@ -393,6 +413,7 @@ public class TunePadLogic {
         return Loudness_Value_1;
       }
     }
+    @Override
     public double Loudness_S(double percent, double value) {
       if (percent < 0.5) {
         Loudness_Value_0 = value;
@@ -401,6 +422,7 @@ public class TunePadLogic {
       }
       return value;
     }
+    @Override
     public/* virtual */ void Render_Audio(Render_Context rc, Wave_Carrier Wave) {
       Boolean snargle = true;
     }
@@ -415,15 +437,18 @@ public class TunePadLogic {
     ////#endregion
     // Drawable interface
     /* ************************************************************************************************************************ */
+    @Override
     public ArrayList<Drawable> Get_My_Children() {// Drawable
       return null;
     }
+    @Override
     public void Draw_Me(Drawing_Context dc) {// Drawable Dummy_Playable
       Drawing_Context mydc = new Drawing_Context(dc, this);
       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
     }
     /* ************************************************************************************************************************ */
+    @Override
     public Playable_Drawable Xerox_Me() {
       Dummy_Playable child = null;
       try {
@@ -434,10 +459,12 @@ public class TunePadLogic {
       return child;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public String Name_G() {
       return MyName;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public String Name_S(String value) {
       return MyName = value;
     }
@@ -521,9 +548,6 @@ public class TunePadLogic {
     @Override
     public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
       /* Root_Playable  */
-      if (this == Stack.Exclude) {
-        return false;
-      }
       Drawing_Context mydc = new Drawing_Context(dc, this);
       Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
 
@@ -671,19 +695,23 @@ public class TunePadLogic {
       frequency = 0.0;
     }
     ////#region Playable Members
+    @Override
     public void Set_Octave(double Fresh_Octave) {
       this.octave = Fresh_Octave;
       this.frequency = Octave_To_Frequency(Fresh_Octave);
     }
+    @Override
     public void Set_Frequency(double Fresh_Frequency) {
       this.frequency = Fresh_Frequency;
       this.octave = Frequency_To_Octave(Fresh_Frequency);
     }
     /* ************************************************************************************************************************ */
     double M_Start_Time = 0;
+    @Override
     public double Start_Time_G() {
       return M_Start_Time;
     }
+    @Override
     public void Start_Time_S(double val) {
       M_Start_Time = val;
     }
@@ -694,6 +722,7 @@ public class TunePadLogic {
     }
     /* ************************************************************************************************************************ */
     double Loudness_Value_0, Loudness_Value_1;
+    @Override
     public double Loudness_G(double percent) {
       if (percent < 0.5) {
         return Loudness_Value_0;
@@ -701,6 +730,7 @@ public class TunePadLogic {
         return Loudness_Value_1;
       }
     }
+    @Override
     public double Loudness_S(double percent, double value) {
       if (percent < 0.5) {
         Loudness_Value_0 = value;
@@ -725,6 +755,7 @@ public class TunePadLogic {
     }
     double Radius = 5;
     double Diameter = Radius * 2.0;
+    @Override
     public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
       /* Note  */
       Drawing_Context mydc = new Drawing_Context(dc, this);
@@ -740,6 +771,7 @@ public class TunePadLogic {
       }
     }
     /* ************************************************************************************************************************ */
+    @Override
     public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
       return false;/* Note is a leaf, so always returns false. */
     }
@@ -764,10 +796,12 @@ public class TunePadLogic {
       //double cycles = Frequency_Integral_Bent_Octave(slope, ybase, time0);
       return amp.num;
     }
+    @Override
     public double Get_Max_Amplitude() {
       return 1.0;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public/* virtual */ void Render_Audio(Render_Context rc, Wave_Carrier Wave) {
       long samplecnt = 0;
       double Time;
@@ -872,9 +906,11 @@ public class TunePadLogic {
     }
     /* Drawable interface */
     /* ************************************************************************************************************************ */
+    @Override
     public ArrayList<Drawable> Get_My_Children() {/* Drawable */
       return null;
     }
+    @Override
     public void Draw_Me(Drawing_Context dc) {/* Drawable */
       /* Note  */
       Drawing_Context mydc = new Drawing_Context(dc, this);
@@ -916,6 +952,7 @@ public class TunePadLogic {
 
     }
     /* ************************************************************************************************************************ */
+    @Override
     public Playable_Drawable Xerox_Me() {
       Note child = null;
       try {
@@ -926,10 +963,12 @@ public class TunePadLogic {
       return child;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public String Name_G() {
       return MyName;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public String Name_S(String value) {
       return MyName = value;
     }

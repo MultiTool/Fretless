@@ -102,9 +102,6 @@ public class Drifter_Box implements TunePadLogic.Playable_Drawable {/* Drifter_B
   /* ************************************************************************************************************************ */
   public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
     /* Drifter_Box  */
-    if (this == Stack.Exclude) {/* look for any contact with the container hits of any children I might own. */
-      return false;
-    }
     TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
     Boolean found = this.Content.Hit_Test_Container(mydc, Xloc, Yloc, Depth + 1, Stack);
     if (found) {
