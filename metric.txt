@@ -1,1 +1,1 @@
-Milliseconds:153.0  Metric:15.359477124183003
+Milliseconds:93.0  Metric:25.26881720430107

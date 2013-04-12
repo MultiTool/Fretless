@@ -16,6 +16,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
+import java.awt.event.*;
 
 /**
 
@@ -44,32 +45,25 @@ public class Fretless {
     // http://docs.oracle.com/javase/tutorial/uiswing/examples/start/HelloWorldSwingProject/src/start/HelloWorldSwing.java
     //Create and set up the window.
     JFrame frame = new JFrame("Fretless");
-    // capture keyboard events 
-    frame.addKeyListener(new KeyListener() {
-      @Override
-      public void keyPressed(KeyEvent e) {
-        if (e.isControlDown()) {
-          char ch = Character.toLowerCase(e.getKeyChar());
-          if (ch == 'q') {
-            System.out.println("Quit!");
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    
+    // capture global keyboard events, such as quit (ctrl-q) or save (ctrl-s). 
+    KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+      @Override  // http://stackoverflow.com/questions/5344823/how-can-i-listen-for-key-presses-within-java-swing-accross-all-components
+      public boolean dispatchKeyEvent(KeyEvent e) {
+        // System.out.println("Got key event!");
+        System.out.println("getKeyChar[" + e.getKeyChar() + "] getKeyCode[" + e.getKeyCode() + "] getModifiers[" + e.getModifiers() + "]");
+          if (e.isControlDown()) {
+            char ch = (char) e.getKeyCode();// always uppercase
+            System.out.println("ch:" + ch + ":");
+            if (e.getKeyCode() == KeyEvent.VK_Q) {
+              System.out.println("Quit!");
+              System.exit(0);
+            }
           }
-        }
-      }
-      @Override
-      public void keyReleased(KeyEvent e) {
-      }
-      @Override
-      public void keyTyped(KeyEvent e) {
-        if (e.isControlDown()) {
-          char ch = Character.toLowerCase(e.getKeyChar());
-          if (ch == 'q') {
-            System.out.println("Quit!");
-          }
-        }
+        return false;// false allows other key events to be triggered, too. 
       }
     });
-    
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     JPanel MainPanel = new JPanel();
     frame.getContentPane().add(MainPanel);
@@ -92,10 +86,6 @@ public class Fretless {
 
       //panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     }
-
-//    KeyEventDispatcher myKeyEventDispatcher = new DefaultFocusManager();
-//    java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(myKeyEventDispatcher);
-    // KeyboarFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(myKeyEventDispatcher);
 
     frame.setSize(700, 700);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

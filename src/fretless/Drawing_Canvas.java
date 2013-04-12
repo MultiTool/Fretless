@@ -85,6 +85,26 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
       public void mouseMoved(java.awt.event.MouseEvent evt) {
       }
     });
+    this.setFocusable(true);
+    this.addKeyListener(new KeyListener() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+        if (e.isControlDown()) {
+          char ch = (char) e.getKeyCode();// always uppercase
+          System.out.println("ch[" + ch + "]");
+          if (e.getKeyCode() == KeyEvent.VK_C) {
+            System.out.println("Copy!");
+          }
+        }
+      }
+      @Override
+      public void keyReleased(KeyEvent e) {
+      }
+      @Override
+      public void keyTyped(KeyEvent e) {
+      }
+    });
+
     /*
      MouseListener ml = new MouseAdapter(){
      public void mousePressed(MouseEvent e){
