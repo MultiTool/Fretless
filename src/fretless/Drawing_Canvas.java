@@ -94,6 +94,8 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
           System.out.println("ch[" + ch + "]");
           if (e.getKeyCode() == KeyEvent.VK_C) {
             System.out.println("Copy!");
+          } else if (e.getKeyCode() == KeyEvent.VK_X) {
+            System.out.println("Cut!");
           }
         }
       }
@@ -190,6 +192,70 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
      */
   }
   /* *************************************************************************************************** */
+  private void Drawing_Canvas_Reshape_Node(java.awt.event.MouseEvent evt) {
+    /* For dragging a selected node without changing topology  */
+    if (Stack != null) {
+      if (Stack.Stack_Depth > 0) {// if something has been picked and is being dragged around.
+        mousex = evt.getX();
+        mousey = evt.getY();
+        TunePadLogic.Playable_Drawable drifter = Selected;
+        Drawing_Context dc = new Drawing_Context(Main_DC);
+        Drawing_Context Create_Drawing_Transform = Stack.Create_Drawing_Transform(dc);
+        /*
+         first we must de-map the mouse coords to be the local coords of the thing selected.
+         issue is, does a thing have its own coordinates, or does the parent have them?
+         so far, a thing has its own coords, but it can have a box parent that really does the work.
+        
+         each ones personal coords are always relative to its container. 
+         so why not give the individual proper offset coords?
+         really though each nodes origin is its 0,0.  
+         por lo tanto, when I select an object, I disregard its own local coords, for they are only relevant to its parent.
+         so when it is cut, copied or pasted, the nomads local coords are overwritten. 
+         and...? what of edit?  local coords are redefined. 
+         they are overwritten with mouse xy converted to the coordinate system inside the nomads container.
+        
+         what of vine node box? can its child have non00 coords? sure, but if we drag child outside of box a visible line must connect them.
+         Note_Box
+         Note_Boxes belong internally to Chorus_Vine
+        
+         selecting a node that is part of a chorus vine means selecting its note box. 
+        
+         can or should a notebox's child be allowed to be offset from the box? 
+         if so{
+         grabbing the box is distinct from grabbing the child. 
+         copy the box dupes it on same vine.
+         cut the box removes from vine (to attach to other vine?)
+         copy the child just copies the child, remove its offset. 
+         cut the child removes the box too. (boxes dissapear when no longer needed.) - doesn't this require a parent pointer?
+         }
+         if not{
+        cut child removes box from vine.
+        copy child is free to roam anywhere. can be pasted back in same vine. 
+        
+         }
+        
+        hmm, either way child offset from vine is always vertical. that is, notebox only draws vert lines, children can do anything.
+        dragging child root in time also moves notebox.
+        notebox can be dragged in time and pitch.
+        
+        when I select a child, the hit stack remembers its parent. 
+        
+        how about, for starters, we can select a child root and drag it anywhere in time (bad idea long run)
+        then, we also support dragging notebox around. 
+        the real question is 
+        
+         */
+
+        Point2D.Double ps = dc.From_Screen(mousex, mousey);
+        Selected_Context.Start_Time_S(ps.x);// no no no
+        Selected_Context.Octave_S(ps.y);
+
+        //Selected.Start_Time_S(WIDTH);
+        //Selected.Octave_S(FRAMEBITS);
+      }
+    }
+  }
+  /* *************************************************************************************************** */
   private void Drawing_CanvasMouseDragged(java.awt.event.MouseEvent evt) {// TODO add your handling code here:
     boolean hit = false;/* Future drag and drop support */
     if (Stack != null) {
@@ -205,7 +271,7 @@ public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
         {
           Point2D.Double ps = dc.From_Screen(mousex, mousey);
           Selected_Context.Start_Time_S(ps.x);
-          Selected_Context.Set_Octave(ps.y);
+          Selected_Context.Octave_S(ps.y);
 
           dc.Absolute_X = ps.x;
           dc.Absolute_Y = ps.y;

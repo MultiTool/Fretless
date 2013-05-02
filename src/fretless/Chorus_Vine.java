@@ -244,13 +244,13 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
   }
   /* ************************************************************************************************************************ */
   @Override
-  public void Set_Octave(double Fresh_Octave) {
+  public void Octave_S(double Fresh_Octave) {
     this.octave = Fresh_Octave;
     this.frequency = TunePadLogic.Octave_To_Frequency(Fresh_Octave);
   }
   /* ************************************************************************************************************************ */
   @Override
-  public void Set_Frequency(double Fresh_Frequency) {
+  public void Frequency_S(double Fresh_Frequency) {
     this.frequency = Fresh_Frequency;
     this.octave = TunePadLogic.Frequency_To_Octave(Fresh_Frequency);
   }
@@ -299,6 +299,7 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
     return found;
   }
   /* ************************************************************************************************************************ */
+  @Override
   public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
     /* Chorus_Vine  */
     TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
@@ -369,7 +370,7 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
         for (int cnt = 0; cnt < this.size(); cnt++) {
           Note_Box child = this.get(cnt);
 
-          loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Get_Pitch()));
+          loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Octave_G()));
 
           lin.setLine(xprev, yprev, loc.x, loc.y);
           linehit = TunePadLogic.Hit_Test_Line(pnt, lin, Line_Radius, hitpnt);
@@ -398,7 +399,7 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
   public void Duration_S(double value) {
     this.Duration_Val = value;
   }
-  public double Get_Pitch() {
+  public double Octave_G() {
     return octave;
   }
   public double Get_Max_Amplitude() {
@@ -456,7 +457,7 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
     for (int cnt = 0; cnt < this.size(); cnt++) {
       Note_Box child = this.get(cnt);
       child.Draw_Me(mydc);
-      loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Get_Pitch()));
+      loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Octave_G()));
       mydc.gr.setColor(Color.black);
       mydc.gr.drawLine(xprev, yprev, (int) loc.x, (int) loc.y);
       xprev = (int) loc.x;
@@ -470,7 +471,7 @@ public class Chorus_Vine extends Note_List_Base implements TunePadLogic.DropBox 
     child.Remove_All_Notes();
     for (int cnt = 0; cnt < this.size(); cnt++) {
       Note_Box subnote = this.get(cnt).Xerox_Me_Typed();
-      child.Add_Note(subnote.My_Note, subnote.Start_Time_G(), subnote.Get_Pitch());
+      child.Add_Note(subnote.My_Note, subnote.Start_Time_G(), subnote.Octave_G());
     }
     return child;
   }
@@ -514,7 +515,7 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
     public Note_Box(Playable_Drawable freshnote, double Time, double Pitch) {
       this(freshnote);
       this.Start_Time_S(Time);
-      this.Set_Octave(Pitch);
+      this.Octave_S(Pitch);
     }
     /* ************************************************************************************************************************ */
     public void Add_Overlap(Note_Box freshnote) {
@@ -566,6 +567,7 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       Get_Ends_After(Time_Limit, recipient.My_Overlaps);
     }
     //#region Playable Members
+    @Override
     public Boolean Hit_Test_Stack(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
       /* Note_Box  */
       TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
@@ -578,6 +580,7 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       return found;
     }
     /* ************************************************************************************************************************ */
+    @Override
     public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
       /* Note_Box  */
       TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
@@ -588,11 +591,13 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       return found;
     }
     /* ************************************************************************************************************************ */
-    public void Set_Octave(double Fresh_Octave) {
+    @Override
+    public void Octave_S(double Fresh_Octave) {
       this.octave = Fresh_Octave;
       this.frequency = TunePadLogic.Octave_To_Frequency(Fresh_Octave);
     }
-    public void Set_Frequency(double Fresh_Frequency) {
+    @Override
+    public void Frequency_S(double Fresh_Frequency) {
       this.frequency = Fresh_Frequency;
       this.octave = TunePadLogic.Frequency_To_Octave(Fresh_Frequency);
     }
@@ -626,13 +631,15 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       this.My_Note.Duration_S(value);
     }
     @Override
-    public double Get_Pitch() {
+    public double Octave_G() {
       return octave;
     }
+    @Override
     public double Get_Max_Amplitude() {
       return 1.0;
     }
     double Loudness_Value_0, Loudness_Value_1;
+    @Override
     public double Loudness_G(double percent) {
       if (percent < 0.5) {
         return Loudness_Value_0;
@@ -640,6 +647,7 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
         return Loudness_Value_1;
       }
     }
+    @Override
     public double Loudness_S(double percent, double value) {
       if (percent < 0.5) {
         Loudness_Value_0 = value;
@@ -648,6 +656,7 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       }
       return value;
     }
+    @Override
     public void Render_Audio(Render_Context rc, TunePadLogic.Wave_Carrier Wave) {
       TunePadLogic.Render_Context LocalRC = new TunePadLogic.Render_Context(rc);
       LocalRC.Add_Transpose(this.Start_Time_G(), this.octave);
@@ -664,15 +673,17 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
     }
     //#endregion
     // Drawable interface
-        /* ************************************************************************************************************************ */
+    /* ************************************************************************************************************************ */
+    @Override
     public ArrayList<TunePadLogic.Drawable> Get_My_Children() {// Drawable
       return null;
     }
+    @Override
     public void Draw_Me(TunePadLogic.Drawing_Context dc) {// Drawable
       /* Note_Box  */
       Drawing_Context mydc = new Drawing_Context(dc, this);
       dc.gr.setColor(Color.green);
-      // Point2D.Double pnt = mydc.To_Screen(this.Start_Time_G(),this.Get_Pitch());
+      // Point2D.Double pnt = mydc.To_Screen(this.Start_Time_G(),this.Octave_G());
       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
@@ -689,14 +700,17 @@ class Note_List_Base extends ArrayList<Note_List_Base.Note_Box> {
       }
       return child;
     }
+    @Override
     /* ************************************************************************************************************************ */
     public Playable_Drawable Xerox_Me() {
       return Xerox_Me_Typed();
     }
+    @Override
     /* ************************************************************************************************************************ */
     public String Name_G() {
       return MyName;
     }
+    @Override
     /* ************************************************************************************************************************ */
     public String Name_S(String value) {
       return MyName = value;

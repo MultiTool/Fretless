@@ -59,14 +59,32 @@ that means finding a second time from x,y to an object.  but you need x,y anyway
 container_insert(double x,double y,Playable_Drawable NewChild)
 
 
+the big question is how to handle a single pattern duplicated in many places. 
+one way is to have a single pattern object, that is the child of many parent containers. 
+  pro: everything syncs perfectly.
+  con: no child can point up to its parent.
+other way is to have real multiple instances, and a master object dictates all of the changes to each of the children.
+  pro: each child can point to its parent.
+  con: how the heck do you sync separate objects?  
+    do we need to support a sync() method for every instance? and to support such a thing, what happens when each member might have a different topology?
+
+when do we need pointers up to parents? when we remove a playable, it must notify its parent that it is gone.
+ (if selected though, we have a hit stack that remembers parentage.)
+
+ok so we select a thing, then want to drag it around. 
+if the thing selected is a notebox in a vine, then dragging must interact with vine.  that's OK, noteboxes can point up.
+
+if the thing selected is a child, then we need the hit stack to notify the vine. 
+
+maybe every playable needs a Notify_Up() function?  and what information do we pass to it?
+
+alternative is that each child object can have multiple parent pointers. still need Notify_Up() for each parent.  
+
+is this all about inverse kinematics back upward the parent tree?  
+
+inevitably, if any child can have multiple parents, then a separate transform object above each child is necessary. one for each linkage. 
 
 
+oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
 
-
-
-
-
-
-
-
-
+patterns in different places would be cool, though.

@@ -29,11 +29,13 @@ public class Drifter_Box implements TunePadLogic.Playable_Drawable {/* Drifter_B
   double octave, frequency;
   public String MyName;
   /* ************************************************************************************************************************ */
-  public void Set_Octave(double Fresh_Octave) {
+  @Override
+  public void Octave_S(double Fresh_Octave) {
     this.octave = Fresh_Octave;
     this.frequency = TunePadLogic.Octave_To_Frequency(Fresh_Octave);
   }
-  public void Set_Frequency(double Fresh_Frequency) {
+  @Override
+  public void Frequency_S(double Fresh_Frequency) {
     this.frequency = Fresh_Frequency;
     this.octave = TunePadLogic.Frequency_To_Octave(Fresh_Frequency);
   }
@@ -67,7 +69,7 @@ public class Drifter_Box implements TunePadLogic.Playable_Drawable {/* Drifter_B
     this.Content.Duration_S(value);
   }
   @Override
-  public double Get_Pitch() {
+  public double Octave_G() {
     return octave;
   }
   public double Get_Max_Amplitude() {
@@ -110,7 +112,7 @@ public class Drifter_Box implements TunePadLogic.Playable_Drawable {/* Drifter_B
     return found;
   }
   /* ************************************************************************************************************************ */
-  public ArrayList< TunePadLogic.Drawable> Get_My_Children() {
+  public ArrayList<TunePadLogic.Drawable> Get_My_Children() {
     throw new UnsupportedOperationException("Not supported yet.");
   }
   /* ************************************************************************************************************************ */

@@ -108,7 +108,7 @@ public class TunePadLogic {
     }
     public void Add_Transpose(Playable Child_Frame) {
       this.Absolute_Time += Child_Frame.Start_Time_G();
-      this.Absolute_YTranspose += Child_Frame.Get_Pitch();
+      this.Absolute_YTranspose += Child_Frame.Octave_G();
     }
   }
   /* ************************************************************************************************************************ */
@@ -150,7 +150,7 @@ public class TunePadLogic {
       this.Parent = Fresh_Parent;
       this.gr = Fresh_Parent.gr;
       this.Absolute_X = Fresh_Parent.Absolute_X + Fresh_Note.Start_Time_G();
-      this.Absolute_Y = Fresh_Parent.Absolute_Y + Fresh_Note.Get_Pitch();
+      this.Absolute_Y = Fresh_Parent.Absolute_Y + Fresh_Note.Octave_G();
       Scale_X = Fresh_Parent.Scale_X;
       Scale_Y = Fresh_Parent.Scale_Y;
       Trans_X = Fresh_Parent.Trans_X;
@@ -161,7 +161,7 @@ public class TunePadLogic {
     }
     public void Add_Transpose(Playable_Drawable Child_Frame) {
       this.Absolute_X += Child_Frame.Start_Time_G();
-      this.Absolute_Y += Child_Frame.Get_Pitch();
+      this.Absolute_Y += Child_Frame.Octave_G();
 
       //Trans_X = Absolute_X; Trans_Y = Absolute_Y;
       /*
@@ -309,15 +309,79 @@ public class TunePadLogic {
      */
   }
   /* ************************************************************************************************************************ */
+  public interface ITransformer {
+    /*
+    possible transforms are:
+    xy transpose: start time, octave
+    time (X) scale: duration factor - NOT duration, but coefficient.
+    loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
+    x  loudness scale could only work if we have loudness envelopes that trickle down.
+    alternate Y scale is a pitch expander?  that would sound terrible.
+    
+    can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
+    
+    oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
+    
+    */
+    double Octave_G();// getset
+    void Octave_S(double Fresh_Octave);
+    double Start_Time_G();
+    void Start_Time_S(double val);// getset
+    double Time_Scale_G();// getset
+    void Time_Scale_S(double value);// getset
+    double Loudness_Scale_G(double percent);
+    void Loudness_Scale_S(double percent, double value);
+    
+    void Render_Audio(Render_Context rc, Wave_Carrier Wave);// stateless rendering (requires calculus)
+    void Render_Audio_Start(Render_Context rc);// stateful rendering
+    void Render_Audio_To(double Hasta, Wave_Carrier Wave);
+    Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack);// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack);
+    String Name_G();// just propagate note name
+    String Name_S(String value);
+  };
+  /* ************************************************************************************************************************ */
+  public class Transformer {// implements ITransformer{
+    /*
+    possible transforms are:
+    xy transpose: start time, octave
+    time (X) scale: duration factor - NOT duration, but coefficient.
+    loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
+    x  loudness scale could only work if we have loudness envelopes that trickle down.
+    alternate Y scale is a pitch expander?  that would sound terrible.
+    
+    can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
+    
+    oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
+    
+    */
+    public double Octave_G(){return 0;};// getset
+    public void Octave_S(double Fresh_Octave){};
+    public double Start_Time_G(){return 0;};
+    public void Start_Time_S(double val){};// getset
+    public double Time_Scale_G(){return 0;};// getset
+    public void Time_Scale_S(double value){};// getset
+    public double Loudness_Scale_G(double percent){return 0;};
+    public void Loudness_Scale_S(double percent, double value){};
+    
+    public void Render_Audio(Render_Context rc, Wave_Carrier Wave){};// stateless rendering (requires calculus)
+    public void Render_Audio_Start(Render_Context rc){};// stateful rendering
+    public void Render_Audio_To(double Hasta, Wave_Carrier Wave){};
+    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack){return false;};// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack){return false;};
+    public String Name_G(){return "";};// just propagate note name
+    public String Name_S(String value){return "";};
+  };
+  /* ************************************************************************************************************************ */
   public interface Playable {
-    void Set_Octave(double Fresh_Octave);
-    void Set_Frequency(double Fresh_Frequency);
+    double Octave_G();// getset
+    void Octave_S(double Fresh_Octave);
+    void Frequency_S(double Fresh_Frequency);// getset
     double Start_Time_G();
     void Start_Time_S(double val);// getset
     double End_Time_G();// getset
     double Duration_G();
     void Duration_S(double value);// getset
-    double Get_Pitch();
     /*
      * we will need
      * double Get_Start_Pitch();
@@ -366,11 +430,11 @@ public class TunePadLogic {
       return false;/* Dummy_Playable is a leaf, so always returns false. */
     }
     @Override
-    public void Set_Octave(double Fresh_Octave) {
+    public void Octave_S(double Fresh_Octave) {
       Boolean snargle = true;
     }
     @Override
-    public void Set_Frequency(double Fresh_Frequency) {
+    public void Frequency_S(double Fresh_Frequency) {
       Boolean snargle = true;
     }
     double Start_Time_Val;
@@ -397,7 +461,7 @@ public class TunePadLogic {
       Duration_Val = value;
     }
     @Override
-    public double Get_Pitch() {
+    public double Octave_G() {
       return 1.0;
     }
     @Override
@@ -564,11 +628,11 @@ public class TunePadLogic {
     }
     /* ************************************************************************************************************************ */
     @Override
-    public void Set_Octave(double Fresh_Octave) {
+    public void Octave_S(double Fresh_Octave) {
       Boolean snargle = true;
     }
     @Override
-    public void Set_Frequency(double Fresh_Frequency) {
+    public void Frequency_S(double Fresh_Frequency) {
       Boolean snargle = true;
     }
     /* ************************************************************************************************************************ */
@@ -595,7 +659,7 @@ public class TunePadLogic {
     public void Duration_S(double value) {
     }
     @Override
-    public double Get_Pitch() {
+    public double Octave_G() {
       if (false) {
         return 0.0;// snargle
       } else {
@@ -696,12 +760,12 @@ public class TunePadLogic {
     }
     ////#region Playable Members
     @Override
-    public void Set_Octave(double Fresh_Octave) {
+    public void Octave_S(double Fresh_Octave) {
       this.octave = Fresh_Octave;
       this.frequency = Octave_To_Frequency(Fresh_Octave);
     }
     @Override
-    public void Set_Frequency(double Fresh_Frequency) {
+    public void Frequency_S(double Fresh_Frequency) {
       this.frequency = Fresh_Frequency;
       this.octave = Frequency_To_Octave(Fresh_Frequency);
     }
@@ -750,7 +814,7 @@ public class TunePadLogic {
       this.Duration_Val = value;
     }
     @Override
-    public double Get_Pitch() {
+    public double Octave_G() {
       return octave;
     }
     double Radius = 5;
@@ -1028,7 +1092,7 @@ public class TunePadLogic {
       Note drone = new Note();
       drone.Start_Time_S(Note_Local_Delay);
       drone.Duration_S(Duration * 14);
-      //not0.Set_Octave(Base_Octave - 1.2);
+      //not0.Octave_S(Base_Octave - 1.2);
       drone.Loudness_S(1.0, 1.0);
       vine.Add_Note(drone, TStart, Base_Octave - 1.2);
       TStart += Duration + Spacing;
@@ -1038,7 +1102,7 @@ public class TunePadLogic {
       Note not1 = new Note();
       not1.Start_Time_S(Note_Local_Delay);
       not1.Duration_S(Duration);// +Duration / 2;
-      //not1.Set_Octave(Base_Octave + ncnt);
+      //not1.Octave_S(Base_Octave + ncnt);
       not1.Loudness_S(0.0, 0.75);
       vine.Add_Note(not1, TStart, Base_Octave + ncnt);
       TStart += Duration + Spacing;

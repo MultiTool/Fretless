@@ -20,7 +20,7 @@ import java.awt.event.*;
 
 /**
 
- @author bczinrw
+ @author MultiTool
  */
 public class Fretless {
   /**
@@ -46,21 +46,21 @@ public class Fretless {
     //Create and set up the window.
     JFrame frame = new JFrame("Fretless");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    
+
     // capture global keyboard events, such as quit (ctrl-q) or save (ctrl-s). 
     KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
       @Override  // http://stackoverflow.com/questions/5344823/how-can-i-listen-for-key-presses-within-java-swing-accross-all-components
       public boolean dispatchKeyEvent(KeyEvent e) {
         // System.out.println("Got key event!");
         System.out.println("getKeyChar[" + e.getKeyChar() + "] getKeyCode[" + e.getKeyCode() + "] getModifiers[" + e.getModifiers() + "]");
-          if (e.isControlDown()) {
-            char ch = (char) e.getKeyCode();// always uppercase
-            System.out.println("ch:" + ch + ":");
-            if (e.getKeyCode() == KeyEvent.VK_Q) {
-              System.out.println("Quit!");
-              System.exit(0);
-            }
+        if (e.isControlDown()) {
+          char ch = (char) e.getKeyCode();// always uppercase
+          System.out.println("ch:" + ch + ":");
+          if (e.getKeyCode() == KeyEvent.VK_Q) {
+            System.out.println("Quit!");
+            System.exit(0);
           }
+        }
         return false;// false allows other key events to be triggered, too. 
       }
     });

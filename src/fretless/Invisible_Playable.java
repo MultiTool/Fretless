@@ -80,11 +80,11 @@ public class Invisible_Playable extends TunePadLogic.Dummy_Playable {
   }
   /* ************************************************************************************************************************ */
   @Override
-  public void Set_Octave(double Fresh_Octave) {
+  public void Octave_S(double Fresh_Octave) {
     Boolean snargle = true;
   }
   @Override
-  public void Set_Frequency(double Fresh_Frequency) {
+  public void Frequency_S(double Fresh_Frequency) {
     Boolean snargle = true;
   }
   /* ************************************************************************************************************************ */
@@ -111,7 +111,7 @@ public class Invisible_Playable extends TunePadLogic.Dummy_Playable {
   public void Duration_S(double value) {
   }
   @Override
-  public double Get_Pitch() {
+  public double Octave_G() {
     return Double.MIN_VALUE;// snargle
   }
   @Override
