@@ -331,7 +331,6 @@ public class TunePadLogic {
     void Time_Scale_S(double value);// getset
     double Loudness_Scale_G(double percent);
     void Loudness_Scale_S(double percent, double value);
-    
     void Render_Audio(Render_Context rc, Wave_Carrier Wave);// stateless rendering (requires calculus)
     void Render_Audio_Start(Render_Context rc);// stateful rendering
     void Render_Audio_To(double Hasta, Wave_Carrier Wave);
@@ -416,7 +415,12 @@ public class TunePadLogic {
   /* ************************************************************************************************************************ */
   public static class Dummy_Playable implements Playable_Drawable {
     String MyName;
+    public ArrayList<ITransformer> Parents;
+    public Dummy_Playable() {
+      Parents = new ArrayList<>();
+    }
     // //#region Playable Members
+    @Override
     public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
       /* Dummy_Playable  */
       Drawing_Context mydc = new Drawing_Context(dc, this);
@@ -534,7 +538,7 @@ public class TunePadLogic {
     }
   }
   /* ************************************************************************************************************************ */
-  public class Root_Playable extends Dummy_Playable {
+  public static class Root_Playable extends Dummy_Playable {
     public Playable_Drawable Child;
     /* ************************************************************************************************************************ */
     public Root_Playable() {
