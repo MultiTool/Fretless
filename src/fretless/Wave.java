@@ -1,24 +1,8 @@
 package fretless;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.sound.sampled.*;
-
-import java.awt.Color;
-import java.util.*;
 import java.util.ArrayList;
 
-import java.io.*;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.geom.*;
-
-/**
-
+/*
  @author MultiTool
  */
 
