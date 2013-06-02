@@ -24,7 +24,7 @@ import java.awt.geom.*;
 
 /**
 
- @author JCAtkeson
+ @author MultiTool
  */
 
 /* ********************************************************************************************************************************************************* */
@@ -311,18 +311,18 @@ public class TunePadLogic {
   /* ************************************************************************************************************************ */
   public interface ITransformer {
     /*
-    possible transforms are:
-    xy transpose: start time, octave
-    time (X) scale: duration factor - NOT duration, but coefficient.
-    loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
-    x  loudness scale could only work if we have loudness envelopes that trickle down.
-    alternate Y scale is a pitch expander?  that would sound terrible.
+     possible transforms are:
+     xy transpose: start time, octave
+     time (X) scale: duration factor - NOT duration, but coefficient.
+     loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
+     x  loudness scale could only work if we have loudness envelopes that trickle down.
+     alternate Y scale is a pitch expander?  that would sound terrible.
     
-    can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
+     can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
     
-    oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
+     oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
     
-    */
+     */
     double Octave_G();// getset
     void Octave_S(double Fresh_Octave);
     double Start_Time_G();
@@ -342,34 +342,72 @@ public class TunePadLogic {
   /* ************************************************************************************************************************ */
   public class Transformer {// implements ITransformer{
     /*
-    possible transforms are:
-    xy transpose: start time, octave
-    time (X) scale: duration factor - NOT duration, but coefficient.
-    loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
-    x  loudness scale could only work if we have loudness envelopes that trickle down.
-    alternate Y scale is a pitch expander?  that would sound terrible.
+     possible transforms are:
+     xy transpose: start time, octave
+     time (X) scale: duration factor - NOT duration, but coefficient.
+     loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
+     x  loudness scale could only work if we have loudness envelopes that trickle down.
+     alternate Y scale is a pitch expander?  that would sound terrible.
     
-    can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
+     can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
     
-    oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
+     oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
     
-    */
-    public double Octave_G(){return 0;};// getset
-    public void Octave_S(double Fresh_Octave){};
-    public double Start_Time_G(){return 0;};
-    public void Start_Time_S(double val){};// getset
-    public double Time_Scale_G(){return 0;};// getset
-    public void Time_Scale_S(double value){};// getset
-    public double Loudness_Scale_G(double percent){return 0;};
-    public void Loudness_Scale_S(double percent, double value){};
+     */
+    public double Octave_G() {
+      return 0;
+    }
+    ;// getset
+    public void Octave_S(double Fresh_Octave) {
+    }
+    ;
+    public double Start_Time_G() {
+      return 0;
+    }
+    ;
+    public void Start_Time_S(double val) {
+    }
+    ;// getset
+    public double Time_Scale_G() {
+      return 0;
+    }
+    ;// getset
+    public void Time_Scale_S(double value) {
+    }
+    ;// getset
+    public double Loudness_Scale_G(double percent) {
+      return 0;
+    }
+    ;
+    public void Loudness_Scale_S(double percent, double value) {
+    }
+    ;
     
-    public void Render_Audio(Render_Context rc, Wave_Carrier Wave){};// stateless rendering (requires calculus)
-    public void Render_Audio_Start(Render_Context rc){};// stateful rendering
-    public void Render_Audio_To(double Hasta, Wave_Carrier Wave){};
-    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack){return false;};// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
-    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack){return false;};
-    public String Name_G(){return "";};// just propagate note name
-    public String Name_S(String value){return "";};
+    public void Render_Audio(Render_Context rc, Wave_Carrier Wave) {
+    }
+    ;// stateless rendering (requires calculus)
+    public void Render_Audio_Start(Render_Context rc) {
+    }
+    ;// stateful rendering
+    public void Render_Audio_To(double Hasta, Wave_Carrier Wave) {
+    }
+    ;
+    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
+      return false;
+    }
+    ;// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
+      return false;
+    }
+    ;
+    public String Name_G() {
+      return "";
+    }
+    ;// just propagate note name
+    public String Name_S(String value) {
+      return "";
+    }
+  ;
   };
   /* ************************************************************************************************************************ */
   public interface Playable {

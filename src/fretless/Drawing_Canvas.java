@@ -38,7 +38,7 @@ import fretless.TunePadLogic.*;
  */
 /**
 
- @author JCAtkeson
+ @author MultiTool
  */
 /* *************************************************************************************************** */
 public class Drawing_Canvas extends javax.swing.JPanel {/* JFrame */
