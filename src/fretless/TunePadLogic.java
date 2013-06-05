@@ -309,37 +309,6 @@ public class TunePadLogic {
      */
   }
   /* ************************************************************************************************************************ */
-  public interface ITransformer {
-    /*
-     possible transforms are:
-     xy transpose: start time, octave
-     time (X) scale: duration factor - NOT duration, but coefficient.
-     loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
-     x  loudness scale could only work if we have loudness envelopes that trickle down.
-     alternate Y scale is a pitch expander?  that would sound terrible.
-    
-     can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
-    
-     oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
-    
-     */
-    double Octave_G();// getset
-    void Octave_S(double Fresh_Octave);
-    double Start_Time_G();
-    void Start_Time_S(double val);// getset
-    double Time_Scale_G();// getset
-    void Time_Scale_S(double value);// getset
-    double Loudness_Scale_G(double percent);
-    void Loudness_Scale_S(double percent, double value);
-    void Render_Audio(Render_Context rc, Wave_Carrier Wave);// stateless rendering (requires calculus)
-    void Render_Audio_Start(Render_Context rc);// stateful rendering
-    void Render_Audio_To(double Hasta, Wave_Carrier Wave);
-    Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack);// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
-    Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack);
-    String Name_G();// just propagate note name
-    String Name_S(String value);
-  };
-  /* ************************************************************************************************************************ */
   public class Transformer {// implements ITransformer{
     /*
      possible transforms are:
@@ -354,60 +323,52 @@ public class TunePadLogic {
      oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
     
      */
-    public double Octave_G() {
-      return 0;
+    public double Octave;
+    public double Start_Time;
+    public double Time_Scale;
+    public double Loudness_Scale;
+    public double Octave_G() {// getset
+      return Octave;
     }
-    ;// getset
     public void Octave_S(double Fresh_Octave) {
+      Octave = Fresh_Octave;
     }
-    ;
     public double Start_Time_G() {
-      return 0;
+      return Start_Time;
     }
-    ;
-    public void Start_Time_S(double val) {
+    public void Start_Time_S(double val) {// getset
+      Start_Time = val;
     }
-    ;// getset
-    public double Time_Scale_G() {
-      return 0;
+    public double Time_Scale_G() {// getset
+      return Time_Scale;
     }
-    ;// getset
-    public void Time_Scale_S(double value) {
+    public void Time_Scale_S(double value) {// getset
+      Time_Scale = value;
     }
-    ;// getset
     public double Loudness_Scale_G(double percent) {
-      return 0;
+      return Loudness_Scale;
     }
-    ;
     public void Loudness_Scale_S(double percent, double value) {
+      Loudness_Scale = value;
     }
-    ;
-    
     public void Render_Audio(Render_Context rc, Wave_Carrier Wave) {
-    }
-    ;// stateless rendering (requires calculus)
+    }// stateless rendering (requires calculus)
     public void Render_Audio_Start(Render_Context rc) {
-    }
-    ;// stateful rendering
+    }// stateful rendering
     public void Render_Audio_To(double Hasta, Wave_Carrier Wave) {
     }
-    ;
     public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
       return false;
-    }
-    ;// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    }// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
     public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
       return false;
     }
-    ;
     public String Name_G() {
       return "";
-    }
-    ;// just propagate note name
+    }// just propagate note name
     public String Name_S(String value) {
       return "";
     }
-  ;
   };
   /* ************************************************************************************************************************ */
   public interface Playable {
@@ -453,7 +414,7 @@ public class TunePadLogic {
   /* ************************************************************************************************************************ */
   public static class Dummy_Playable implements Playable_Drawable {
     String MyName;
-    public ArrayList<ITransformer> Parents;
+    public ArrayList<Transformer> Parents;
     public Dummy_Playable() {
       Parents = new ArrayList<>();
     }

@@ -1,5 +1,6 @@
 package fretless;
 
+import fretless.TunePadLogic.Transformer;
 import java.util.ArrayList;
 
 /*
@@ -7,7 +8,7 @@ import java.util.ArrayList;
  */
 
 /* ********************************************************************************************************************************************************* */
-class Wave {
+public class Wave {
   /* **************************************************************************** */
   public final static class Render_Context {
   }
@@ -19,18 +20,30 @@ class Wave {
     public double[] buffer;
   }
   /* **************************************************************************** */
-  public interface ICursor//Slicer, playerhead, Cursor, generator? 
+  public static class CursorBase//Slicer, playerhead, Cursor, generator? 
   {
+    Transformer MyTransformer;// the transform that owns my playable
+    Playable MyPlayable;
+    Render_Context MyRC;
+    CursorBase MyParent;
+    public double currentT; // and whatever state info
     /* **************************************************************************** */
-    void GetNextChunk(double t1, Result buf);
+    void LoadParentCursor(CursorBase Parent) {// virtual
+      //MyPlayable = Playable0;
+      MyParent = Parent;
+      MyRC = Parent.MyRC;
+    }
+    /* **************************************************************************** */
+    void GetNextChunk(double t1, Result buf) {
+    }
   }
   /* **************************************************************************** */
   public interface IPlayable {
-    public ArrayList<TunePadLogic.ITransformer> Get_Parents();
+    public ArrayList<TunePadLogic.Transformer> Get_Parents();
     /* **************************************************************************** */
-    ICursor Launch_Cursor(Render_Context rc); // from start, t0 not supported
+    CursorBase Launch_Cursor(Render_Context rc); // from start, t0 not supported
       /* **************************************************************************** */
-    ICursor Launch_Cursor(Render_Context rc, double t0);
+    CursorBase Launch_Cursor(Render_Context rc, double t0);
   }
   /* **************************************************************************** */
   public interface IDrawable {
@@ -41,32 +54,36 @@ class Wave {
     /* **************************************************************************** */
   public static class Playable implements IPlayable {
     public String MyName;
-    public ArrayList<TunePadLogic.ITransformer> Parents;
+    public ArrayList<TunePadLogic.Transformer> Parents;
     public Playable() {
       Parents = new ArrayList<>();
     }
     @Override
-    public ArrayList<TunePadLogic.ITransformer> Get_Parents() {
+    public ArrayList<TunePadLogic.Transformer> Get_Parents() {
       return Parents;
     }
     /* **************************************************************************** */
     @Override
-    public ICursor Launch_Cursor(Render_Context rc) { /* from start, t0 not supported */ return new Cursor(this, rc);
+    public CursorBase Launch_Cursor(Render_Context rc) { /* from start, t0 not supported */ return new Cursor(this, rc);
     }
     /* **************************************************************************** */
     @Override
-    public ICursor Launch_Cursor(Render_Context rc, double t0) {
+    public CursorBase Launch_Cursor(Render_Context rc, double t0) {
       return new Cursor(this, rc);
     }
     /* **************************************************************************** */
-    public static class Cursor implements ICursor // MyCursor
+    public class Cursor extends CursorBase // MyCursor
     {
-      Playable MyPlayable;
-      Render_Context MyRC;
-      public double currentT; // and whatever state info
+      /* **************************************************************************** */
       public Cursor(Playable Playable0, Render_Context MyRC0) {
-        MyPlayable = Playable0;
+        this.MyPlayable = Playable.this;//MyPlayable = Playable0;
         MyRC = MyRC0;
+      }
+      /* **************************************************************************** */
+      @Override
+      public void LoadParentCursor(CursorBase Parent) {
+        super.LoadParentCursor(Parent);
+        this.MyPlayable = Playable.this;
       }
       /* **************************************************************************** */
       @Override
@@ -77,29 +94,34 @@ class Wave {
   //#endregion real use
 
   /* **************************************************************************** */
-  public static class Group extends Playable {
+  public class Group extends Playable {
     @Override
-    public ArrayList<TunePadLogic.ITransformer> Get_Parents() {
+    public ArrayList<TunePadLogic.Transformer> Get_Parents() {
       return Parents;
     }
     /* **************************************************************************** */
     @Override
-    public ICursor Launch_Cursor(Render_Context rc) { /* from start, t0 not supported */ return new Cursor(this, rc);
+    public CursorBase Launch_Cursor(Render_Context rc) { /* from start, t0 not supported */ return new Cursor(this, rc);
     }
     /* **************************************************************************** */
     @Override
-    public ICursor Launch_Cursor(Render_Context rc, double t0) {
+    public CursorBase Launch_Cursor(Render_Context rc, double t0) {
       return new Cursor(this, rc);
     }
     /* **************************************************************************** */
-    public static class Cursor implements ICursor // MyCursor
+    public class Cursor extends CursorBase // MyCursor
     {
-      Group MyPlayable;
-      Render_Context MyRC;
       public double currentT; // and whatever state info
       public Cursor(Group Playable0, Render_Context MyRC0) {
-        MyPlayable = Playable0;
+        this.MyPlayable = Group.this;//MyPlayable = Playable0;
         MyRC = MyRC0;
+      }
+      /* **************************************************************************** */
+      @Override
+      public void LoadParentCursor(CursorBase Parent) {
+        super.LoadParentCursor(Parent);
+        // here we want to generate and attach render context
+        // so take parent cursor's rc and generate a new global xform from that and local xform
       }
       /* **************************************************************************** */
       @Override
