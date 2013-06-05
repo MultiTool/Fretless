@@ -88,3 +88,22 @@ inevitably, if any child can have multiple parents, then a separate transform ob
 oy.  easiest way in the world is for every node to be unique, have its own coords and maybe parent pointer, and you just copy things. 
 
 patterns in different places would be cool, though.
+
+***
+
+6/5/2013
+so new creatures are:
+transformer - all coordinates and scaling
+playable - meat
+cursor - spawn of playable, carries all state information during play.
+
+transformers are like edges of connection between multiple parents and multiple children.
+
+with cursor do we need render context anymore?  rc contains sum&product of all offsets and scales. (and shears?)
+so would not my cursor contain all of my compiled temporary transformations? 
+when I create a cursor, do I pass it the cursor that was passed to me?  that is how rc works anyway, so why not.
+for temporary, just stuff one rc inside each of all cursor types.  all cursors own an rc (and a drawing context?)
+
+do playables still have a Render_Audio function?  should not. spawn cursor and render to next chunk.
+for the time being, cursors will not be static type.  They will do all of the playing that their playable needs, plus state information.
+

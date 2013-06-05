@@ -7,3 +7,5 @@
 *.exe
 *.o
 *.so
+dist/*
+build/*
