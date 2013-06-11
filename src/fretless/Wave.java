@@ -50,6 +50,10 @@ public class Wave {
   /* **************************************************************************** */
   public interface IPlayable {
     public ArrayList<TunePadLogic.Transformer> Get_Parents();
+        /* ************************************************************************************************************************ */
+    double Duration_G();
+    /* **************************************************************************** */
+    double Get_Max_Amplitude();
     /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc); // from start, t0 not supported
       /* **************************************************************************** */
@@ -64,6 +68,7 @@ public class Wave {
     /* **************************************************************************** */
   public static class Playable implements IPlayable {
     public String MyName;
+    double Duration_Val;
     public ArrayList<TunePadLogic.Transformer> Parents;
     public Playable() {
       Parents = new ArrayList<>();
@@ -71,6 +76,15 @@ public class Wave {
     @Override
     public ArrayList<TunePadLogic.Transformer> Get_Parents() {
       return Parents;
+    }
+    /* ************************************************************************************************************************ */
+    @Override
+    public double Duration_G() {
+      return this.Duration_Val;
+    }
+    @Override
+    public double Get_Max_Amplitude() {
+      return 1.0;
     }
     /* **************************************************************************** */
     @Override
@@ -151,14 +165,9 @@ public class Wave {
     }
     ////#region Playable Members
     /* ************************************************************************************************************************ */
-    double Duration_Val;
     @Override
     public double Duration_G() {
       return this.Duration_Val;
-    }
-    @Override
-    public void Duration_S(double value) {
-      this.Duration_Val = value;
     }
     @Override
     public double Get_Max_Amplitude() {
@@ -204,11 +213,11 @@ public class Wave {
         TunePadLogic.RefDouble amp = new TunePadLogic.RefDouble();
         double Note_Time_Offset;
 
-        double Absolute_Pitch = rc.Absolute_YTranspose + this.octave;
+        double Absolute_Pitch = rc.Absolute_YTranspose + this.MyTransformer.Octave;
 
-        double Note_Absolute_Start_Time = rc.Absolute_Time + this.Start_Time_G();
+        double Note_Absolute_Start_Time = rc.Absolute_Time + MyTransformer.Start_Time_G();
         double Local_Clip_Absolute_Start_Time = Math.max(Note_Absolute_Start_Time, rc.Clip_Time_Start);
-        double Local_Clip_Absolute_End_Time = Math.min(Local_Clip_Absolute_Start_Time + this.Duration_G(), rc.Clip_Time_End);
+        double Local_Clip_Absolute_End_Time = Math.min(Local_Clip_Absolute_Start_Time + MyNote.Duration_G(), rc.Clip_Time_End);
         if (Local_Clip_Absolute_Start_Time >= Local_Clip_Absolute_End_Time) {
           Wave.WaveForm = new double[0];
           Wave.Duration = 0;
@@ -236,8 +245,8 @@ public class Wave {
       /* ************************************************************************************************************************ */
       public void Render_Audio_Start(TunePadLogic.Render_Context rc) {// stateful rendering
         MyRc = rc;
-        My_Absolute_Start_Pitch = MyRc.Absolute_YTranspose + this.octave;
-        My_Absolute_Start_Time = MyRc.Absolute_Time + this.Start_Time_G();
+        My_Absolute_Start_Pitch = MyRc.Absolute_YTranspose + this.MyTransformer.Octave;
+        My_Absolute_Start_Time = MyRc.Absolute_Time + this.MyTransformer.Start_Time_G();
         Local_Clip_Absolute_Start_Time = Math.max(My_Absolute_Start_Time, MyRc.Clip_Time_Start);
         Absolute_Sample_Start_Dex = (long) Math.ceil(Local_Clip_Absolute_Start_Time * (double) MyRc.Sample_Rate);// index of first sample of this note.
       }
@@ -247,7 +256,7 @@ public class Wave {
         double Time;
         TunePadLogic.RefDouble amp = new TunePadLogic.RefDouble();
         double Note_Time_Offset;
-        double Local_Clip_Absolute_End_Time = Math.min(Local_Clip_Absolute_Start_Time + this.Duration_G(), MyRc.Clip_Time_End);
+        double Local_Clip_Absolute_End_Time = Math.min(Local_Clip_Absolute_Start_Time + this.MyNote.Duration_G(), MyRc.Clip_Time_End);
         if (Local_Clip_Absolute_Start_Time >= Local_Clip_Absolute_End_Time) {
           Wave.WaveForm = new double[0];
           Wave.Duration = 0;
