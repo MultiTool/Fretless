@@ -44,20 +44,26 @@ public class Wave {
       MyRC = Parent.MyRC;
     }
     /* **************************************************************************** */
-    void GetNextChunk(double t1, Result buf) {
+    void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {
     }
   }
   /* **************************************************************************** */
   public interface IPlayable {
     public ArrayList<TunePadLogic.Transformer> Get_Parents();
-        /* ************************************************************************************************************************ */
+    /* ************************************************************************************************************************ */
+    void Start_Time_S(double val);
+    double Start_Time_G();
+    void Loudness_S(double DeltaT, double val);
+    double Loudness_G(double DeltaT);
     double Duration_G();
     /* **************************************************************************** */
     double Get_Max_Amplitude();
     /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc); // from start, t0 not supported
-      /* **************************************************************************** */
+    /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc, double t0);
+    /* **************************************************************************** */
+    Playable Xerox_Me();
   }
   /* **************************************************************************** */
   public interface IDrawable {
@@ -65,10 +71,11 @@ public class Wave {
     void Draw_Me(Drawing_Context dc);
   }
   // #region real use
-    /* **************************************************************************** */
+  /* **************************************************************************** */
   public static class Playable implements IPlayable {
     public String MyName;
     double Duration_Val;
+    double Start_Time_Val, Loudness_Val;
     public ArrayList<TunePadLogic.Transformer> Parents;
     public Playable() {
       Parents = new ArrayList<>();
@@ -79,12 +86,39 @@ public class Wave {
     }
     /* ************************************************************************************************************************ */
     @Override
+    public void Start_Time_S(double val) {
+      Start_Time_Val = val;
+    }
+    @Override
+    public double Start_Time_G() {
+      return Start_Time_Val;
+    }
+    @Override
+    public void Loudness_S(double DeltaT, double val) {
+      Loudness_Val = val;
+    }
+    @Override
+    public double Loudness_G(double DeltaT) {
+      return Loudness_Val;
+    }
+    @Override
     public double Duration_G() {
       return this.Duration_Val;
     }
     @Override
     public double Get_Max_Amplitude() {
       return 1.0;
+    }
+    /* ************************************************************************************************************************ */
+    @Override
+    public Playable Xerox_Me() {
+      Playable child = null;
+      try {
+        child = (Playable) this.clone();
+      } catch (CloneNotSupportedException ex) {
+        Logger.getLogger(TunePadLogic.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      return child;
     }
     /* **************************************************************************** */
     @Override
@@ -111,7 +145,7 @@ public class Wave {
       }
       /* **************************************************************************** */
       @Override
-      public void GetNextChunk(double t1, Result buf) {// this?
+      public void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {// this?
       }
     }
   }
@@ -122,6 +156,10 @@ public class Wave {
     @Override
     public ArrayList<TunePadLogic.Transformer> Get_Parents() {
       return Parents;
+    }
+    /* ************************************************************************************************************************ */
+    public ArrayList<TunePadLogic.Drawable> Get_My_Children() {/* Drawable */
+      return null;
     }
     /* **************************************************************************** */
     @Override
@@ -149,7 +187,7 @@ public class Wave {
       }
       /* **************************************************************************** */
       @Override
-      public void GetNextChunk(double t1, Result buf) {// this?
+      public void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {// this?
       }
     }
   }
@@ -202,46 +240,6 @@ public class Wave {
       public void LoadParentCursor(CursorBase Parent) {
         super.LoadParentCursor(Parent);
       }
-      /* **************************************************************************** */
-      @Override
-      public void GetNextChunk(double t1, Result buf) {// this?
-      }
-      /* ************************************************************************************************************************ */
-      public void Render_Audio(TunePadLogic.Render_Context rc, TunePadLogic.Wave_Carrier Wave) {
-        long samplecnt = 0;
-        double Time;
-        TunePadLogic.RefDouble amp = new TunePadLogic.RefDouble();
-        double Note_Time_Offset;
-
-        double Absolute_Pitch = rc.Absolute_YTranspose + this.MyTransformer.Octave;
-
-        double Note_Absolute_Start_Time = rc.Absolute_Time + MyTransformer.Start_Time_G();
-        double Local_Clip_Absolute_Start_Time = Math.max(Note_Absolute_Start_Time, rc.Clip_Time_Start);
-        double Local_Clip_Absolute_End_Time = Math.min(Local_Clip_Absolute_Start_Time + MyNote.Duration_G(), rc.Clip_Time_End);
-        if (Local_Clip_Absolute_Start_Time >= Local_Clip_Absolute_End_Time) {
-          Wave.WaveForm = new double[0];
-          Wave.Duration = 0;
-          return;
-        }/* zero-length */
-        Wave.Start_Time = Local_Clip_Absolute_Start_Time;
-
-        long Absolute_Sample_Start = (long) Math.ceil(Local_Clip_Absolute_Start_Time * (double) rc.Sample_Rate);// index of first sample of this note.
-        long Absolute_Sample_End = (long) Math.floor(Local_Clip_Absolute_End_Time * (double) rc.Sample_Rate);// index of last sample of this note.
-        Wave.Start_Index = Absolute_Sample_Start;
-
-        long Num_Samples = Absolute_Sample_End - Absolute_Sample_Start;
-        Wave.WaveForm = new double[(int) (Num_Samples + Slop)];
-
-        double Absolute_Frequency = Octave_To_Frequency(Absolute_Pitch);
-
-        /* Note_Time_Offset is the difference between the beginning of this note and the place we start rendering, defined by clip start time. */
-        Note_Time_Offset = (Absolute_Sample_Start * rc.Sample_Interval) - Note_Absolute_Start_Time;// this time is right.  first it is aligned to T0 (origin of the universe), then cropped to local note coords
-        for (samplecnt = 0; samplecnt < Num_Samples; samplecnt++) {
-          Time = Note_Time_Offset + (rc.Sample_Interval * (double) samplecnt);
-          this.Play_Me_Local_Time(Time, Absolute_Frequency, amp);
-          Wave.WaveForm[(int) samplecnt] = amp.num;
-        }
-      }
       /* ************************************************************************************************************************ */
       public void Render_Audio_Start(TunePadLogic.Render_Context rc) {// stateful rendering
         MyRc = rc;
@@ -249,6 +247,11 @@ public class Wave {
         My_Absolute_Start_Time = MyRc.Absolute_Time + this.MyTransformer.Start_Time_G();
         Local_Clip_Absolute_Start_Time = Math.max(My_Absolute_Start_Time, MyRc.Clip_Time_Start);
         Absolute_Sample_Start_Dex = (long) Math.ceil(Local_Clip_Absolute_Start_Time * (double) MyRc.Sample_Rate);// index of first sample of this note.
+      }
+      /* **************************************************************************** */
+      @Override
+      public void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {
+        Render_Audio_To(TNext, buf);
       }
       /* ************************************************************************************************************************ */
       public void Render_Audio_To(double Hasta, TunePadLogic.Wave_Carrier Wave) {
@@ -276,7 +279,7 @@ public class Wave {
         Note_Time_Offset = (Absolute_Sample_Start_Dex * MyRc.Sample_Interval) - My_Absolute_Start_Time;// this time is right.  first it is aligned to T0 (origin of the universe), then cropped to local note coords
         for (samplecnt = 0; samplecnt < Num_Samples; samplecnt++) {
           Time = Note_Time_Offset + (MyRc.Sample_Interval * (double) samplecnt);
-          this.Play_Me_Local_Time(Time, Absolute_Frequency, amp);
+          this.MyNote.Play_Me_Local_Time(Time, Absolute_Frequency, amp);
           Wave.WaveForm[(int) samplecnt] = amp.num;
         }
       }
@@ -297,29 +300,14 @@ public class Wave {
     /* Drawable interface */
     /* ************************************************************************************************************************ */
     @Override
-    public ArrayList<TunePadLogic.Drawable> Get_My_Children() {/* Drawable */
-      return null;
-    }
-    /* ************************************************************************************************************************ */
-    @Override
-    public TunePadLogic.Playable_Drawable Xerox_Me() {
-      TunePadLogic.Note child = null;
+    public Playable Xerox_Me() {
+      Playable child = null;
       try {
-        child = (TunePadLogic.Note) this.clone();
+        child = (Note) this.clone();
       } catch (CloneNotSupportedException ex) {
         Logger.getLogger(TunePadLogic.class.getName()).log(Level.SEVERE, null, ex);
       }
       return child;
-    }
-    /* ************************************************************************************************************************ */
-    @Override
-    public String Name_G() {
-      return MyName;
-    }
-    /* ************************************************************************************************************************ */
-    @Override
-    public String Name_S(String value) {
-      return MyName = value;
     }
   };// class Note
 }
