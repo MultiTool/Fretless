@@ -327,6 +327,7 @@ public class TunePadLogic {
     public double Start_Time;
     public double Time_Scale;
     public double Loudness_Scale;
+    public Playable MyPlayable;
     public double Octave_G() {// getset
       return Octave;
     }
@@ -408,7 +409,6 @@ public class TunePadLogic {
   }
   /* ************************************************************************************************************************ */
   public interface DropBox extends Playable_Drawable {/* Anything that can receive an object in drag and drop. */
-
     void Container_Insert(Playable_Drawable NewChild, double Time, double Pitch);
   }
   /* ************************************************************************************************************************ */

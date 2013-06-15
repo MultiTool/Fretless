@@ -29,6 +29,73 @@ public class Wave {
   public final static class Result {
     public double[] buffer;
   }
+  /* ************************************************************************************************************************ */
+  public static class Transformer {// implements ITransformer{
+    /*
+     possible transforms are:
+     xy transpose: start time, octave
+     time (X) scale: duration factor - NOT duration, but percentage scale.
+     initial loudness (W) scale: loudness factor - NOT loudness, but coefficient. (how to display this if coef is >1? 
+     variable loudness scale could only work if we have loudness envelopes that trickle down.
+     
+     can we also use shear transforms to bend whole bunches of children?  Start_Octave, End_Octave. 
+    
+     a note would be a series of control xyz(pitch,time,loud) points that a continuous note morphs to.
+     that is an array of control points. shear is generated. 
+     so: note.addpoint(xyz), note.setpoint(dex?,xyz); list is automatically sorted by Time.
+     in the beginning, this cannot be an envelope, so it is always a leaf node. if it WERE an envelope, it must pass through transformer. a tensor? 
+     how does this fit with click and drag? 
+     playable origins can be cut/copied and relocated.
+     inner stuff like vol envelopes and pitch changes, only dragged around. no topo change. 
+     so is initial pitch T=0, Y=0 always? or are they offset from 0,0?  ideally offset. 
+     transform keeps location relative to parent, note parts keep location relative to transform.
+    
+     basic non-bendy note is always 0,0 to transform. playables have a hit test, but all of that logic is internal. 
+    
+     bendy note can have an offset origin just for editing, but that creates conflict between drag-all and drag-first cpoint.
+     so bendy notes always draw a 00 origin point. 
+     don't the xformers draw their own click/drag point? yes. 
+     you can drag an xform, but you if you cut/copy it, you only cut/copy the note under it. xforms are unique relationships.
+     for now every xform has the same clickable shape. 
+    
+     */
+    public double Octave;
+    public double Start_Time;
+    public double Time_Scale;
+    public double Loudness_Scale;
+    public IPlayable MyParent;// container, group?
+    public IPlayable MyPlayable;
+    public double Octave_G() {// getset
+      return Octave;
+    }
+    public void Octave_S(double Fresh_Octave) {
+      Octave = Fresh_Octave;
+    }
+    public double Start_Time_G() {
+      return Start_Time;
+    }
+    public void Start_Time_S(double val) {// getset
+      Start_Time = val;
+    }
+    public double Time_Scale_G() {// getset
+      return Time_Scale;
+    }
+    public void Time_Scale_S(double value) {// getset
+      Time_Scale = value;
+    }
+    public double Loudness_Scale_G() {
+      return Loudness_Scale;
+    }
+    public void Loudness_Scale_S(double value) {
+      Loudness_Scale = value;
+    }
+    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+      return false;
+    }// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+      return false;
+    }
+  };
   /* **************************************************************************** */
   public static class CursorBase//Slicer, playerhead, Cursor, generator? 
   {
@@ -49,7 +116,7 @@ public class Wave {
   }
   /* **************************************************************************** */
   public interface IPlayable {
-    public ArrayList<TunePadLogic.Transformer> Get_Parents();
+    public ArrayList<Transformer> Get_Parents();
     /* ************************************************************************************************************************ */
     void Start_Time_S(double val);
     double Start_Time_G();
@@ -76,12 +143,12 @@ public class Wave {
     public String MyName;
     double Duration_Val;
     double Start_Time_Val, Loudness_Val;
-    public ArrayList<TunePadLogic.Transformer> Parents;
+    public ArrayList<Transformer> Parents;
     public Playable() {
       Parents = new ArrayList<>();
     }
     @Override
-    public ArrayList<TunePadLogic.Transformer> Get_Parents() {
+    public ArrayList<Transformer> Get_Parents() {
       return Parents;
     }
     /* ************************************************************************************************************************ */
@@ -153,13 +220,22 @@ public class Wave {
 
   /* **************************************************************************** */
   public static class Group extends Playable {
-    @Override
-    public ArrayList<TunePadLogic.Transformer> Get_Parents() {
-      return Parents;
+    public ArrayList<Transformer> Children;
+    public Group() {
+      Children = new ArrayList<>();
     }
     /* ************************************************************************************************************************ */
-    public ArrayList<TunePadLogic.Drawable> Get_My_Children() {/* Drawable */
-      return null;
+    public ArrayList<Transformer> Get_My_Children() {/* Drawable */
+      return Children;
+    }
+    /* ************************************************************************************************************************ */
+    public void Add_Child(Playable child, double Time, double Pitch) {
+      Transformer trans = new Transformer();
+      trans.Start_Time_S(Time);
+      trans.Octave_S(Pitch);
+      trans.MyParent = this;
+      trans.MyPlayable = child;
+      this.Children.add(trans);
     }
     /* **************************************************************************** */
     @Override
