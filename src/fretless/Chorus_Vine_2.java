@@ -282,7 +282,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     Boolean found = false;
     int Child_Depth = Depth + 1;
     for (int cnt = 0; cnt < this.size(); cnt++) {
-      TunePadLogic.Playable Child = this.get(cnt);
+      Wave.Playable Child = this.get(cnt).MyPlayable;
       if (Child.Hit_Test_Stack(mydc, Xloc, Yloc, Child_Depth, Stack)) {
         found = true;
         break;
@@ -309,7 +309,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     Boolean found = false;
     int Child_Depth = Depth + 1;
     for (int cnt = 0; cnt < this.size(); cnt++) {
-      TunePadLogic.Playable Child = this.get(cnt);
+      Wave.Playable Child = this.get(cnt).MyPlayable;
       if (Child.Hit_Test_Container(mydc, Xloc, Yloc, Child_Depth, Stack)) {
         found = true;
         break;
@@ -504,7 +504,7 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     /* ************************************************************************************************************************ */
     public Note_Box() {
       My_Overlaps = new Note_Box_List_2();
-      Loudness_S(1.0, Loudness_S(0.0, 1.0));
+      Loudness_S(1.0);
     }
     /* ************************************************************************************************************************ */
     public Note_Box(Wave.Playable freshnote) {
@@ -596,11 +596,6 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
       this.octave = Fresh_Octave;
       this.frequency = TunePadLogic.Octave_To_Frequency(Fresh_Octave);
     }
-    @Override
-    public void Frequency_S(double Fresh_Frequency) {
-      this.frequency = Fresh_Frequency;
-      this.octave = TunePadLogic.Frequency_To_Octave(Fresh_Frequency);
-    }
     /* ************************************************************************************************************************ */
     double M_Start_Time = 0;
     @Override
@@ -623,10 +618,6 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     /* ************************************************************************************************************************ */
     @Override
-    public double Duration_G() {
-      return this.MyPlayable.Duration_G();
-    }
-    @Override
     public double Octave_G() {
       return octave;
     }
@@ -645,19 +636,12 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
       return value;
     }
     @Override
-    public void Render_Audio(Render_Context rc, TunePadLogic.Wave_Carrier Wave) {
-      TunePadLogic.Render_Context LocalRC = new TunePadLogic.Render_Context(rc);
+    public void Render_Audio(Wave.Render_Context rc, TunePadLogic.Wave_Carrier Wave) {
+      Wave.Render_Context LocalRC = new Wave.Render_Context(rc);
       LocalRC.Add_Transpose(this.Start_Time_G(), this.octave);
-      this.MyPlayable.Render_Audio(LocalRC, Wave);
+      Wave.CursorBase cb = this.MyPlayable.Launch_Cursor(LocalRC);
+      //       .Render_Audio(LocalRC, Wave);
       TunePadLogic.Delete(LocalRC);
-    }
-    /* ************************************************************************************************************************ */
-    @Override
-    public void Render_Audio_Start(TunePadLogic.Render_Context rc) {
-    }// stateful rendering
-    /* ************************************************************************************************************************ */
-    @Override
-    public void Render_Audio_To(double Hasta, TunePadLogic.Wave_Carrier Wave) {
     }
     //#endregion
     // Drawable interface

@@ -21,6 +21,19 @@ import java.util.logging.Logger;
 public class Wave {
   /* **************************************************************************** */
   public final static class Render_Context {
+    double Absolute_Time, Absolute_YTranspose;
+    public Render_Context() {
+    }
+    public Render_Context(Render_Context ParentRC) {
+    }
+    public void Add_Transpose(double Time_Offset, double Pitch_Offset) {
+      this.Absolute_Time += Time_Offset;
+      this.Absolute_YTranspose += Pitch_Offset;
+    }
+    public void Add_Transpose(Wave.Transformer Child_Frame) {
+      this.Absolute_Time += Child_Frame.Start_Time_G();
+      this.Absolute_YTranspose += Child_Frame.Octave_G();
+    }
   }
   /* **************************************************************************** */
   public final static class Drawing_Context {
@@ -63,8 +76,8 @@ public class Wave {
     public double Start_Time;
     public double Time_Scale;
     public double Loudness_Scale;
-    public IPlayable MyParent;// container, group?
-    public IPlayable MyPlayable;
+    public Playable MyParent;// container, group?
+    public Playable MyPlayable;
     public double Octave_G() {// getset
       return Octave;
     }
@@ -118,10 +131,10 @@ public class Wave {
   public interface IPlayable {
     public ArrayList<Transformer> Get_Parents();
     /* ************************************************************************************************************************ */
-    void Start_Time_S(double val);
-    double Start_Time_G();
-    void Loudness_S(double DeltaT, double val);
-    double Loudness_G(double DeltaT);
+//    void Start_Time_S(double val);
+//    double Start_Time_G();
+//    void Loudness_S(double DeltaT, double val);
+//    double Loudness_G(double DeltaT);
     double Duration_G();
     /* **************************************************************************** */
     double Get_Max_Amplitude();
@@ -142,7 +155,7 @@ public class Wave {
   public static class Playable implements IPlayable {
     public String MyName;
     double Duration_Val;
-    double Start_Time_Val, Loudness_Val;
+    //double Start_Time_Val, Loudness_Val;
     public ArrayList<Transformer> Parents;
     public Playable() {
       Parents = new ArrayList<>();
@@ -152,22 +165,22 @@ public class Wave {
       return Parents;
     }
     /* ************************************************************************************************************************ */
-    @Override
-    public void Start_Time_S(double val) {
-      Start_Time_Val = val;
-    }
-    @Override
-    public double Start_Time_G() {
-      return Start_Time_Val;
-    }
-    @Override
-    public void Loudness_S(double DeltaT, double val) {
-      Loudness_Val = val;
-    }
-    @Override
-    public double Loudness_G(double DeltaT) {
-      return Loudness_Val;
-    }
+//    @Override
+//    public void Start_Time_S(double val) {
+//      Start_Time_Val = val;
+//    }
+//    @Override
+//    public double Start_Time_G() {
+//      return Start_Time_Val;
+//    }
+//    @Override
+//    public void Loudness_S(double DeltaT, double val) {
+//      Loudness_Val = val;
+//    }
+//    @Override
+//    public double Loudness_G(double DeltaT) {
+//      return Loudness_Val;
+//    }
     @Override
     public double Duration_G() {
       return this.Duration_Val;
@@ -386,4 +399,65 @@ public class Wave {
       return child;
     }
   };// class Note
+  /* ************************************************************************************************************************ */
+  public static class Hit_Stack {
+    public int Stack_Depth;
+    Transformer[] Path;
+    public void Init(int Depth) {
+      Stack_Depth = Depth;
+      Path = new Transformer[Depth];
+    }
+    public void Set(int Depth, Transformer Note) {
+      Path[Depth] = Note;
+    }
+    public void Render_Audio(TunePadLogic.Wave_Carrier wave) {
+      if (Stack_Depth <= 0) {
+        wave.WaveForm = new double[1];
+        return;
+      }
+      TunePadLogic.Render_Context rc = new TunePadLogic.Render_Context();
+      rc.Clip_Time_End = Double.MAX_VALUE;
+      int Last_Depth = Stack_Depth - 1;
+      Create_Audio_Transform(rc);
+      Transformer leaf = this.Path[Last_Depth];
+      leaf.Render_Audio(rc, wave);
+    }
+    public TunePadLogic.Render_Context Create_Audio_Transform(TunePadLogic.Render_Context rc) {
+      int Last_Depth = Stack_Depth - 1;
+      for (int depth = 0; depth < Last_Depth; depth++) {
+        Transformer pb = this.Path[depth];
+        rc.Add_Transpose(pb);
+      }
+      return rc;
+    }
+    public TunePadLogic.Drawing_Context Create_Drawing_Transform(TunePadLogic.Drawing_Context dc) {
+      int Last_Depth = Stack_Depth - 0;
+      for (int depth = 0; depth < Last_Depth; depth++) {
+        Transformer pb = this.Path[depth];
+        dc.Add_Transpose(pb);
+      }
+      return dc;
+    }
+    public Transformer End() {
+      int Last_Depth = Stack_Depth - 1;
+      return this.Path[Last_Depth];
+    }
+    public void Clear() {
+      Stack_Depth = 0;
+      Path = null;
+    }
+    public TunePadLogic.Playable Container;
+    public Transformer Find_Up(Transformer Target) {
+      Transformer retval = null;
+      int Last_Depth = Stack_Depth - 1;
+      for (int depth = Last_Depth; depth >= 0; depth--) {
+        Transformer Nivel = this.Path[depth];
+        if (Nivel == Target) {
+          retval = Nivel;
+          break;
+        }
+      }
+      return retval;
+    }
+  }
 }
