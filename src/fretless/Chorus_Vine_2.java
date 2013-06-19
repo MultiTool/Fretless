@@ -29,15 +29,15 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
 
   double octave, frequency;
   public String MyName = "None";
-  Dictionary<Playable, Note_Box> backlist;// maps playable children back to their note_box containers
+  Dictionary<Wave.Playable, Note_Box> backlist;// maps playable children back to their note_box containers
     /* ************************************************************************************************************************ */
   public Chorus_Vine_2() {
     this.Loudness_S(0.0, 1.0);
     this.Loudness_S(1.0, 1.0);
-    backlist = new Hashtable<TunePadLogic.Playable, Note_Box>();
+    backlist = new Hashtable<Wave.Playable, Note_Box>();
   }
   /* ************************************************************************************************************************ */
-  public void Add_Note(TunePadLogic.Playable_Drawable freshnote, double Time, double Pitch) {
+  public void Add_Note(Wave.Playable freshnote, double Time, double Pitch) {
     Note_Box marker = new Note_Box(freshnote, Time, Pitch);
     marker.End_Time_S(Time + freshnote.Duration_G());
     backlist.put(freshnote, marker);

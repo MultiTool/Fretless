@@ -21,8 +21,31 @@ import java.util.logging.Logger;
 public class Wave {
   /* **************************************************************************** */
   public final static class Render_Context {
-    double Absolute_Time, Absolute_YTranspose;
+    public double TimeShift, YTranspose;
+    public double Absolute_Time, Absolute_YTranspose;
+    public double Clip_Time_Start, Clip_Time_End;// absolute coords
+    public int Sample_Rate;
+    public double Sample_Interval;
+    public long Sample_Clip_Start, Sample_Clip_End;// start and ending sample indexes, based at index 0 == beginning of universe.  are they clip limits or parent coordinates?
     public Render_Context() {
+      //Wave = new Wave_Carrier();
+      Sample_Rate = 44100;
+      Sample_Interval = 1.0 / (double) Sample_Rate;
+    }
+    public Render_Context(TunePadLogic.Render_Context Parent) {// pass the torch of context coordinates
+      this();
+      this.Absolute_Time = Parent.Absolute_Time;
+      this.Absolute_YTranspose = Parent.Absolute_YTranspose;
+      this.Sample_Rate = Parent.Sample_Rate;
+      this.Sample_Interval = Parent.Sample_Interval;
+      this.Clip_Time_Start = Parent.Clip_Time_Start;
+      this.Clip_Time_End = Parent.Clip_Time_End;
+      this.Sample_Clip_Start = Parent.Sample_Clip_Start;
+      this.Sample_Clip_End = Parent.Sample_Clip_End;
+    }
+    public Render_Context(Wave.Render_Context Parent, Wave.Transformer Child_Frame) {// pass the torch of context coordinates
+      this(Parent);
+      this.Add_Transpose(Child_Frame);
     }
     public Render_Context(Render_Context ParentRC) {
     }
@@ -415,14 +438,14 @@ public class Wave {
         wave.WaveForm = new double[1];
         return;
       }
-      TunePadLogic.Render_Context rc = new TunePadLogic.Render_Context();
+      Wave.Render_Context rc = new Wave.Render_Context();
       rc.Clip_Time_End = Double.MAX_VALUE;
       int Last_Depth = Stack_Depth - 1;
       Create_Audio_Transform(rc);
       Transformer leaf = this.Path[Last_Depth];
       leaf.Render_Audio(rc, wave);
     }
-    public TunePadLogic.Render_Context Create_Audio_Transform(TunePadLogic.Render_Context rc) {
+    public Wave.Render_Context Create_Audio_Transform(Wave.Render_Context rc) {
       int Last_Depth = Stack_Depth - 1;
       for (int depth = 0; depth < Last_Depth; depth++) {
         Transformer pb = this.Path[depth];

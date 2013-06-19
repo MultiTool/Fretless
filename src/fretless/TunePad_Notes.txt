@@ -113,3 +113,14 @@ the main is how to deal with every note having a start and an end.
 click on an end, it only slides. click on a start, you have the whole thing, and can delete, copy, move, or paste it anywhere.
 in the short run, all notes will have preset lengths (as they do now). durations will be read-only, bottom up. 
 
+
+fretls - continue porting
+  cursor based drawing? pros:can draw a time band or series of time bands. cons:more complicated. 
+  would you want cursor drawing to draw whole note? yes, but not for just refreshing a rectangle of screen. anidraw vs just draw? vs highlightdraw?
+  or should cursor type itself do the drawing? then it can use state info to modify display. 
+  ugh, integrating UI with logic, wrong dependencies. drawingcontext can be a wrapper?  cursor owns rendercontext, should also own drawingcontext. 
+  dc wrapper would have to redefine circle, line, etc. or, we have a library of each play type 
+  plus, hit test depends on dc. each playable defines its own shape. NOT cursor-based, right? ergo, playable itself owns drawing info. cursor only calls it? drawing primitive shapes in slices is hard anyway. 
+  each playable owns its own drawme AND its own hit test. do xforms have a hit test?  yes, they must apply xform to dc and pass to playable. 
+  ergo, both xform and playable are idrawable. but xform drawme is never overridden. 
+  
