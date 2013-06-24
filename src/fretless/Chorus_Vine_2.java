@@ -465,9 +465,9 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     }
   }
   /* ************************************************************************************************************************ */
-  public Chorus_Vine Xerox_Me_Typed() {
-    Chorus_Vine child = null;
-    child = (Chorus_Vine) this.clone();
+  public Chorus_Vine_2 Xerox_Me_Typed() {
+    Chorus_Vine_2 child = null;
+    child = (Chorus_Vine_2) this.clone();
     child.Remove_All_Notes();
     for (int cnt = 0; cnt < this.size(); cnt++) {
       Note_Box subnote = this.get(cnt).Xerox_Me_Typed();
@@ -476,17 +476,20 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     return child;
   }
   /* ************************************************************************************************************************ */
+  @Override
   public Playable_Drawable Xerox_Me() {
     return Xerox_Me_Typed();
   }
-  public void Container_Insert(Playable_Drawable NewChild, double Time, double Pitch) {
+  public void Container_Insert(Wave.Playable NewChild, double Time, double Pitch) {
     this.Add_Note(NewChild, Time, Pitch);
   }
   /* ************************************************************************************************************************ */
+  @Override
   public String Name_G() {
     return MyName;
   }
   /* ************************************************************************************************************************ */
+  @Override
   public String Name_S(String value) {
     return MyName = value;
   }
@@ -504,7 +507,7 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     /* ************************************************************************************************************************ */
     public Note_Box() {
       My_Overlaps = new Note_Box_List_2();
-      Loudness_S(1.0);
+      Loudness_Scale_S(1.0);
     }
     /* ************************************************************************************************************************ */
     public Note_Box(Wave.Playable freshnote) {
@@ -568,10 +571,10 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     //#region Playable Members
     @Override
-    public Boolean Hit_Test_Stack(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+    public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack) {
       /* Note_Box  */
-      TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
-      Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+      Wave.Drawing_Context mydc = new Wave.Drawing_Context(dc, this);
+      Point2D scrpnt = mydc.To_Screen(mydc.Absolute_XForm.Start_Time, mydc.Absolute_XForm.Octave);
 
       Boolean found = this.MyPlayable.Hit_Test_Stack(mydc, Xloc, Yloc, Depth + 1, Stack);
       if (found) {
@@ -627,11 +630,11 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     double Loudness_Value_0, Loudness_Value_1;
     @Override
-    public double Loudness_G(double percent) {
+    public double Loudness_Scale_G() {
       return Loudness_Value_0;
     }
     @Override
-    public double Loudness_S(double value) {
+    public double Loudness_Scale_S(double value) {
       Loudness_Value_0 = value;
       return value;
     }
@@ -645,18 +648,13 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     //#endregion
     // Drawable interface
-    /* ************************************************************************************************************************ */
     @Override
-    public ArrayList<TunePadLogic.Drawable> Get_My_Children() {// Drawable
-      return null;
-    }
-    @Override
-    public void Draw_Me(TunePadLogic.Drawing_Context dc) {// Drawable
+    public void Draw_Me(Wave.Drawing_Context dc) {// Drawable
       /* Note_Box  */
-      Drawing_Context mydc = new Drawing_Context(dc, this);
+      Wave.Drawing_Context mydc = new Wave.Drawing_Context(dc, this);
       dc.gr.setColor(Color.green);
       // Point2D.Double pnt = mydc.To_Screen(this.Start_Time_G(),this.Octave_G());
-      Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+      Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_XForm.Start_Time, mydc.Absolute_XForm.Octave);
       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
       this.MyPlayable.Draw_Me(mydc);
@@ -671,11 +669,6 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
         Logger.getLogger(TunePadLogic.class.getName()).log(Level.SEVERE, null, ex);
       }
       return child;
-    }
-    @Override
-    /* ************************************************************************************************************************ */
-    public Playable_Drawable Xerox_Me() {
-      return Xerox_Me_Typed();
     }
   }
   /* ************************************************************************************************************************ */

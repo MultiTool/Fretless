@@ -19,52 +19,6 @@ import java.util.logging.Logger;
 
 /* ********************************************************************************************************************************************************* */
 public class Wave {
-  /* **************************************************************************** */
-  public final static class Render_Context {
-    public double TimeShift, YTranspose;
-    public double Absolute_Time, Absolute_YTranspose;
-    public double Clip_Time_Start, Clip_Time_End;// absolute coords
-    public int Sample_Rate;
-    public double Sample_Interval;
-    public long Sample_Clip_Start, Sample_Clip_End;// start and ending sample indexes, based at index 0 == beginning of universe.  are they clip limits or parent coordinates?
-    public Render_Context() {
-      //Wave = new Wave_Carrier();
-      Sample_Rate = 44100;
-      Sample_Interval = 1.0 / (double) Sample_Rate;
-    }
-    public Render_Context(TunePadLogic.Render_Context Parent) {// pass the torch of context coordinates
-      this();
-      this.Absolute_Time = Parent.Absolute_Time;
-      this.Absolute_YTranspose = Parent.Absolute_YTranspose;
-      this.Sample_Rate = Parent.Sample_Rate;
-      this.Sample_Interval = Parent.Sample_Interval;
-      this.Clip_Time_Start = Parent.Clip_Time_Start;
-      this.Clip_Time_End = Parent.Clip_Time_End;
-      this.Sample_Clip_Start = Parent.Sample_Clip_Start;
-      this.Sample_Clip_End = Parent.Sample_Clip_End;
-    }
-    public Render_Context(Wave.Render_Context Parent, Wave.Transformer Child_Frame) {// pass the torch of context coordinates
-      this(Parent);
-      this.Add_Transpose(Child_Frame);
-    }
-    public Render_Context(Render_Context ParentRC) {
-    }
-    public void Add_Transpose(double Time_Offset, double Pitch_Offset) {
-      this.Absolute_Time += Time_Offset;
-      this.Absolute_YTranspose += Pitch_Offset;
-    }
-    public void Add_Transpose(Wave.Transformer Child_Frame) {
-      this.Absolute_Time += Child_Frame.Start_Time_G();
-      this.Absolute_YTranspose += Child_Frame.Octave_G();
-    }
-  }
-  /* **************************************************************************** */
-  public final static class Drawing_Context {
-  }
-  /* **************************************************************************** */
-  public final static class Result {
-    public double[] buffer;
-  }
   /* ************************************************************************************************************************ */
   public static class Transformer {// implements ITransformer{
     /*
@@ -95,12 +49,12 @@ public class Wave {
      for now every xform has the same clickable shape. 
     
      */
-    public double Octave;
-    public double Start_Time;
-    public double Time_Scale;
-    public double Loudness_Scale;
-    public Playable MyParent;// container, group?
-    public Playable MyPlayable;
+    public double Octave = 0.0;
+    public double Start_Time = 0.0;
+    public double Time_Scale = 1.0;
+    public double Loudness_Scale = 1.0;
+    public Playable MyParent = null;// container, group?
+    public Playable MyPlayable = null;
     public double Octave_G() {// getset
       return Octave;
     }
@@ -122,8 +76,16 @@ public class Wave {
     public double Loudness_Scale_G() {
       return Loudness_Scale;
     }
-    public void Loudness_Scale_S(double value) {
-      Loudness_Scale = value;
+    public double Loudness_Scale_S(double value) {
+      return Loudness_Scale = value;
+    }
+    public void Add_Transpose(double Time_Offset, double Pitch_Offset) {
+      this.Start_Time += Time_Offset;
+      this.Octave += Pitch_Offset;
+    }
+    public void Add_Transpose(Wave.Transformer Child_Frame) {
+      this.Start_Time += Child_Frame.Start_Time_G();
+      this.Octave += Child_Frame.Octave_G();
     }
     public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
       return false;
@@ -132,6 +94,84 @@ public class Wave {
       return false;
     }
   };
+  /* **************************************************************************** */
+  public final static class Render_Context {
+    // will either own or inherit from xformer
+    //public double Absolute_Time, Absolute_YTranspose;
+    public Transformer Absolute_XForm;
+    public double Clip_Time_Start, Clip_Time_End;// absolute coords
+    public int Sample_Rate;
+    public double Sample_Interval;
+    public long Sample_Clip_Start, Sample_Clip_End;// start and ending sample indexes, based at index 0 == beginning of universe.  are they clip limits or parent coordinates?
+    public Render_Context() {
+      Absolute_XForm = new Transformer();
+      //Wave = new Wave_Carrier();
+      Sample_Rate = 44100;
+      Sample_Interval = 1.0 / (double) Sample_Rate;
+    }
+    public Render_Context(Wave.Render_Context ParentRC) {// pass the torch of context coordinates
+      this();
+      this.Absolute_XForm.Octave = ParentRC.Absolute_XForm.Octave;
+      this.Absolute_XForm.Start_Time = ParentRC.Absolute_XForm.Start_Time;
+      this.Sample_Rate = ParentRC.Sample_Rate;
+      this.Sample_Interval = ParentRC.Sample_Interval;
+      this.Clip_Time_Start = ParentRC.Clip_Time_Start;
+      this.Clip_Time_End = ParentRC.Clip_Time_End;
+      this.Sample_Clip_Start = ParentRC.Sample_Clip_Start;
+      this.Sample_Clip_End = ParentRC.Sample_Clip_End;
+    }
+    public Render_Context(Wave.Render_Context Parent, Wave.Transformer Child_Frame) {// pass the torch of context coordinates
+      this(Parent);
+      this.Add_Transpose(Child_Frame);
+    }
+    public void Add_Transpose(double Time_Offset, double Pitch_Offset) {
+      Absolute_XForm.Add_Transpose(Time_Offset, Pitch_Offset);
+    }
+    public void Add_Transpose(Wave.Transformer Child_Frame) {
+      Absolute_XForm.Add_Transpose(Child_Frame);
+    }
+  }
+  /* **************************************************************************** */
+  public final static class Drawing_Context {
+    public Transformer Absolute_XForm;
+    public Drawing_Context() {
+      Absolute_XForm = new Transformer();
+    }
+    public Drawing_Context(Wave.Drawing_Context ParentDC) {// pass the torch of context coordinates
+      this();
+      this.Absolute_XForm.Octave = ParentDC.Absolute_XForm.Octave;
+      this.Absolute_XForm.Start_Time = ParentDC.Absolute_XForm.Start_Time;
+    }
+    public Drawing_Context(Wave.Drawing_Context ParentDC, Wave.Transformer XForm) {// pass the torch of context coordinates
+      this(ParentDC);
+      this.Add_Transpose(XForm);
+    }
+    public void Add_Transpose(double Time_Offset, double Pitch_Offset) {
+      this.Absolute_XForm.Add_Transpose(Time_Offset, Pitch_Offset);
+    }
+    public void Add_Transpose(Wave.Transformer Child_Frame) {
+      this.Absolute_XForm.Add_Transpose(Child_Frame);
+    }
+    public Point2D.Double To_Screen(double xraw, double yraw) {
+      Point2D.Double loc = new Point2D.Double();
+      loc.setLocation((xraw * Absolute_XForm.Time_Scale) + Absolute_XForm.Start_Time, (yraw * Scale_Y) + Trans_Y);
+      //loc.setLocation((xraw * Scale_X) + Absolute_X, (yraw * Scale_Y) + Absolute_Y);
+      return loc;
+    }
+    public Point2D.Double From_Screen(double xscreen, double yscreen) {
+      Point2D.Double loc = new Point2D.Double();
+      loc.setLocation(((xscreen - Absolute_XForm.Time_Scale) / Absolute_XForm.Start_Time), ((yscreen - Trans_Y) / Scale_Y));
+      return loc;
+    }
+  }
+  /* **************************************************************************** */
+  public final static class Result {
+    public double[] buffer;
+  }
+  /* **************************************************************************** */
+  public final static class Control_Point {// 
+    public double Octave, Time, Loudness;
+  }
   /* **************************************************************************** */
   public static class CursorBase//Slicer, playerhead, Cursor, generator? 
   {
@@ -223,6 +263,14 @@ public class Wave {
       }
       return child;
     }
+    // virtual
+    public Boolean Hit_Test_Stack(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+      return false;
+    }
+    // virtual
+    public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+      return false;
+    }
     /* **************************************************************************** */
     @Override
     public CursorBase Launch_Cursor(Render_Context rc) { /* from start, t0 not supported */ return new Cursor(this, rc);
@@ -307,11 +355,27 @@ public class Wave {
   public static class Note extends Playable {
     public double octave = 10.0, frequency = 0.0;// 440;
     double slope = 0.0, ybase = 0.0;
+    public ArrayList<Control_Point> CPoints;
     double Radius = 5;
     double Diameter = Radius * 2.0;
     public Note() {
       octave = 0.0;
       frequency = 0.0;
+      CPoints = new ArrayList<>();
+      Control_Point cp0 = new Control_Point();
+      {
+        cp0.Octave = 0;
+        cp0.Time = 0;
+        cp0.Loudness = 1.0;
+      }
+      Control_Point cp1 = new Control_Point();
+      {
+        cp1.Octave = 0;
+        cp1.Time = 1.0;
+        cp1.Loudness = 0.0;
+      }
+      CPoints.add(cp0);
+      CPoints.add(cp1);
     }
     ////#region Playable Members
     /* ************************************************************************************************************************ */
@@ -399,16 +463,11 @@ public class Wave {
     /* ************************************************************************************************************************ */
     private double Play_Me_Local_Time(double time0, double Base_Frequency, TunePadLogic.RefDouble amp) {// assumes we are passed time in the note's own local coordinates.
       double percenttime = time0 / this.Duration_G();
-      double Loudness = ((1.0 - percenttime) * Loudness_G(0.0)) + (percenttime * Loudness_G(1.0));
+      double Loudness = ((1.0 - percenttime) * this.CPoints.get(0).Loudness) + (percenttime * this.CPoints.get(1).Loudness);
       amp.num = Math.sin(time0 * (Base_Frequency) * TwoPi) * Loudness;
-      //double cycles = Frequency_Integral_Bent_Octave(slope, ybase, time0);
       return amp.num;
     }
     /* #endregion */
-    /* ************************************************************************************************************************ */
-    public void Change_Time(double Time) {
-      this.Start_Time_S(Time);
-    }
     /* Drawable interface */
     /* ************************************************************************************************************************ */
     @Override
@@ -443,7 +502,8 @@ public class Wave {
       int Last_Depth = Stack_Depth - 1;
       Create_Audio_Transform(rc);
       Transformer leaf = this.Path[Last_Depth];
-      leaf.Render_Audio(rc, wave);
+      CursorBase cb = leaf.MyPlayable.Launch_Cursor(rc, rc.Clip_Time_Start);
+      cb.GetNextChunk(rc.Clip_Time_End, wave);
     }
     public Wave.Render_Context Create_Audio_Transform(Wave.Render_Context rc) {
       int Last_Depth = Stack_Depth - 1;
@@ -453,7 +513,7 @@ public class Wave {
       }
       return rc;
     }
-    public TunePadLogic.Drawing_Context Create_Drawing_Transform(TunePadLogic.Drawing_Context dc) {
+    public Wave.Drawing_Context Create_Drawing_Transform(Wave.Drawing_Context dc) {
       int Last_Depth = Stack_Depth - 0;
       for (int depth = 0; depth < Last_Depth; depth++) {
         Transformer pb = this.Path[depth];

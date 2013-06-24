@@ -124,3 +124,4 @@ fretls - continue porting
   each playable owns its own drawme AND its own hit test. do xforms have a hit test?  yes, they must apply xform to dc and pass to playable. 
   ergo, both xform and playable are idrawable. but xform drawme is never overridden. 
   
+hit testing is still a feature of both playable and xform.
