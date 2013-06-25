@@ -25,7 +25,7 @@ import fretless.TunePadLogic.*;
  */
 
 /* ************************************************************************************************************************ */
-public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.DropBox {/* .Playable_Drawable */
+public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* .Playable_Drawable */
 
   double octave, frequency;
   public String MyName = "None";
@@ -37,7 +37,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     backlist = new Hashtable<Wave.Playable, Note_Box>();
   }
   /* ************************************************************************************************************************ */
-  public void Add_Note(Wave.Playable freshnote, double Time, double Pitch) {
+  public void Add_Note(Wave.IPlayable freshnote, double Time, double Pitch) {
     Note_Box marker = new Note_Box(freshnote, Time, Pitch);
     marker.End_Time_S(Time + freshnote.Duration_G());
     backlist.put(freshnote, marker);
@@ -98,7 +98,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
   }
   /* ************************************************************************************************************************ */
   public void Remove_All_Notes() {
-    backlist = new Hashtable<TunePadLogic.Playable, Note_Box>();
+    backlist = new Hashtable<Wave.Playable, Note_Box>();
     this.clear();
     Update_Duration();
   }
@@ -244,28 +244,6 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
   }
   /* ************************************************************************************************************************ */
   @Override
-  public void Octave_S(double Fresh_Octave) {
-    this.octave = Fresh_Octave;
-    this.frequency = TunePadLogic.Octave_To_Frequency(Fresh_Octave);
-  }
-  /* ************************************************************************************************************************ */
-  @Override
-  public void Frequency_S(double Fresh_Frequency) {
-    this.frequency = Fresh_Frequency;
-    this.octave = TunePadLogic.Frequency_To_Octave(Fresh_Frequency);
-  }
-  /* ************************************************************************************************************************ */
-  double M_Start_Time = 0;
-  @Override
-  public double Start_Time_G() {
-    return M_Start_Time;
-  }
-  @Override
-  public void Start_Time_S(double val) {
-    M_Start_Time = val;
-  }
-  /* ************************************************************************************************************************ */
-  @Override
   public double End_Time_G() {
     return this.Start_Time_G() + this.Duration_G();
   }
@@ -274,9 +252,9 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
   double Radius = 5;
   double Diameter = Radius * 2.0;
   @Override
-  public Boolean Hit_Test_Stack(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+  public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
     /* Chorus_Vine  */
-    TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
+    Wave.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
     Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
 
     Boolean found = false;
@@ -427,29 +405,21 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
   public ArrayList<TunePadLogic.Drawable> Get_My_Children() {/* Drawable */
     return null;
   }
-  public void Draw_Me(TunePadLogic.Drawing_Context dc) {/* Drawable */
+  public void Draw_Me(Wave.Drawing_Context dc) {/* Drawable */
     /* Chorus_Vine  */
-    TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
+    Wave.Drawing_Context mydc = new Wave.Drawing_Context(dc, this);
     mydc.gr.setColor(Color.blue);
 
     double clipstart = dc.Clip_Start;
     double clipend = dc.Clip_End;
 
-    /*
-     Polygon pgon = new Polygon();
-     int[] xpoints = new int[3];
-     int[] ypoints = new int[3];
-    
-     mydc.gr.drawPolygon(xpoints, ypoints, 3);
-     */
-    //mydc.gr.drawRect((int) (mydc.Absolute_X * xscale), (int) (mydc.Absolute_Y * yscale), (int) (this.Duration_G() * xscale), 100);//public void drawRect(int x, int y, int width, int height) {
-    Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+    Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_XForm.Start_Time, mydc.Absolute_XForm.Octave);
     mydc.gr.fillOval((int) (pnt.x) - (int) Radius, (int) (pnt.y) - (int) Radius, (int) Diameter, (int) Diameter);
 
     //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
     int xprev, yprev, xloc, yloc;
 
-    Point2D.Double loc = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+    Point2D.Double loc = mydc.To_Screen(mydc.Absolute_XForm.Start_Time, mydc.Absolute_XForm.Octave);
 
     xprev = (int) loc.x;
     yprev = (int) loc.y;
@@ -457,7 +427,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
     for (int cnt = 0; cnt < this.size(); cnt++) {
       Note_Box child = this.get(cnt);
       child.Draw_Me(mydc);
-      loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Octave_G()));
+      loc = mydc.To_Screen(mydc.Absolute_XForm.Start_Time + child.Start_Time_G(), (mydc.Absolute_XForm.Octave + child.Octave_G()));
       mydc.gr.setColor(Color.black);
       mydc.gr.drawLine(xprev, yprev, (int) loc.x, (int) loc.y);
       xprev = (int) loc.x;
@@ -477,21 +447,33 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements TunePadLogic.Drop
   }
   /* ************************************************************************************************************************ */
   @Override
-  public Playable_Drawable Xerox_Me() {
+  public Wave.IPlayable Xerox_Me() {
     return Xerox_Me_Typed();
   }
+  /* ************************************************************************************************************************ */
+  @Override
   public void Container_Insert(Wave.Playable NewChild, double Time, double Pitch) {
     this.Add_Note(NewChild, Time, Pitch);
   }
-  /* ************************************************************************************************************************ */
   @Override
-  public String Name_G() {
-    return MyName;
+  public ArrayList<Wave.Transformer> Get_Parents() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
-  /* ************************************************************************************************************************ */
   @Override
-  public String Name_S(String value) {
-    return MyName = value;
+  public Wave.CursorBase Launch_Cursor(Wave.Render_Context rc) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override
+  public Wave.CursorBase Launch_Cursor(Wave.Render_Context rc, double t0) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override
+  public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  @Override
+  public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 }
 /* ************************************************************************************************************************ */
@@ -510,12 +492,12 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
       Loudness_Scale_S(1.0);
     }
     /* ************************************************************************************************************************ */
-    public Note_Box(Wave.Playable freshnote) {
+    public Note_Box(Wave.IPlayable freshnote) {
       this();
       this.MyPlayable = freshnote;
     }
     /* ************************************************************************************************************************ */
-    public Note_Box(Wave.Playable freshnote, double Time, double Pitch) {
+    public Note_Box(Wave.IPlayable freshnote, double Time, double Pitch) {
       this(freshnote);
       this.Start_Time_S(Time);
       this.Octave_S(Pitch);
@@ -584,9 +566,9 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     /* ************************************************************************************************************************ */
     @Override
-    public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
       /* Note_Box  */
-      TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
+      Wave.Drawing_Context mydc = new Wave.Drawing_Context(dc, this);
       Boolean found = this.MyPlayable.Hit_Test_Container(mydc, Xloc, Yloc, Depth + 1, Stack);
       if (found) {
         Stack.Set(Depth, this);

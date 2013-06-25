@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /* ********************************************************************************************************************************************************* */
 public class Wave {
   /* ************************************************************************************************************************ */
-  public static class Transformer {// implements ITransformer{
+  public static class Transformer implements IHittable {// implements ITransformer{
     /*
      possible transforms are:
      xy transpose: start time, octave
@@ -52,9 +52,10 @@ public class Wave {
     public double Octave = 0.0;
     public double Start_Time = 0.0;
     public double Time_Scale = 1.0;
+    public double Scale_Y = 1.0, Trans_Y = 0.0;
     public double Loudness_Scale = 1.0;
-    public Playable MyParent = null;// container, group?
-    public Playable MyPlayable = null;
+    public IPlayable MyParent = null;// container, group?
+    public IPlayable MyPlayable = null;
     public double Octave_G() {// getset
       return Octave;
     }
@@ -87,11 +88,16 @@ public class Wave {
       this.Start_Time += Child_Frame.Start_Time_G();
       this.Octave += Child_Frame.Octave_G();
     }
-    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
-      return false;
-    }// gets the stack from me to the grandchild you hit.  ideally you'd load it on the way back out, but that'd load in reverse yes?
+    /* **************************************************************************** */
+    @Override
+    public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
+      Drawing_Context dc1 = new Drawing_Context(dc, this);
+      return this.MyPlayable.Hit_Test_Stack(dc1, Xloc, Yloc, Depth, Stack);
+    }
+    @Override
     public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
-      return false;
+      Drawing_Context dc1 = new Drawing_Context(dc, this);
+      return this.MyPlayable.Hit_Test_Container(dc1, Xloc, Yloc, Depth, Stack);
     }
   };
   /* **************************************************************************** */
@@ -154,13 +160,13 @@ public class Wave {
     }
     public Point2D.Double To_Screen(double xraw, double yraw) {
       Point2D.Double loc = new Point2D.Double();
-      loc.setLocation((xraw * Absolute_XForm.Time_Scale) + Absolute_XForm.Start_Time, (yraw * Scale_Y) + Trans_Y);
+      loc.setLocation((xraw * Absolute_XForm.Time_Scale) + Absolute_XForm.Start_Time, (yraw * Absolute_XForm.Scale_Y) + Absolute_XForm.Trans_Y);
       //loc.setLocation((xraw * Scale_X) + Absolute_X, (yraw * Scale_Y) + Absolute_Y);
       return loc;
     }
     public Point2D.Double From_Screen(double xscreen, double yscreen) {
       Point2D.Double loc = new Point2D.Double();
-      loc.setLocation(((xscreen - Absolute_XForm.Time_Scale) / Absolute_XForm.Start_Time), ((yscreen - Trans_Y) / Scale_Y));
+      loc.setLocation(((xscreen - Absolute_XForm.Time_Scale) / Absolute_XForm.Start_Time), ((yscreen - Absolute_XForm.Trans_Y) / Absolute_XForm.Scale_Y));
       return loc;
     }
   }
@@ -190,14 +196,20 @@ public class Wave {
     void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {
     }
   }
+  /* ************************************************************************************************************************ */
+  public interface IHittable {
+    public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack);
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack);
+  }
+  /* ************************************************************************************************************************ */
+  public interface DropBox extends Wave.IPlayable {/* Anything that can receive an object in drag and drop. */
+
+    void Container_Insert(Playable NewChild, double Time, double Pitch);
+  }
   /* **************************************************************************** */
-  public interface IPlayable {
+  public interface IPlayable extends IHittable {
     public ArrayList<Transformer> Get_Parents();
     /* ************************************************************************************************************************ */
-//    void Start_Time_S(double val);
-//    double Start_Time_G();
-//    void Loudness_S(double DeltaT, double val);
-//    double Loudness_G(double DeltaT);
     double Duration_G();
     /* **************************************************************************** */
     double Get_Max_Amplitude();
@@ -206,7 +218,7 @@ public class Wave {
     /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc, double t0);
     /* **************************************************************************** */
-    Playable Xerox_Me();
+    IPlayable Xerox_Me();
   }
   /* **************************************************************************** */
   public interface IDrawable {
@@ -228,22 +240,6 @@ public class Wave {
       return Parents;
     }
     /* ************************************************************************************************************************ */
-//    @Override
-//    public void Start_Time_S(double val) {
-//      Start_Time_Val = val;
-//    }
-//    @Override
-//    public double Start_Time_G() {
-//      return Start_Time_Val;
-//    }
-//    @Override
-//    public void Loudness_S(double DeltaT, double val) {
-//      Loudness_Val = val;
-//    }
-//    @Override
-//    public double Loudness_G(double DeltaT) {
-//      return Loudness_Val;
-//    }
     @Override
     public double Duration_G() {
       return this.Duration_Val;
@@ -254,7 +250,7 @@ public class Wave {
     }
     /* ************************************************************************************************************************ */
     @Override
-    public Playable Xerox_Me() {
+    public IPlayable Xerox_Me() {
       Playable child = null;
       try {
         child = (Playable) this.clone();
@@ -264,11 +260,11 @@ public class Wave {
       return child;
     }
     // virtual
-    public Boolean Hit_Test_Stack(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+    public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack) {
       return false;
     }
     // virtual
-    public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
       return false;
     }
     /* **************************************************************************** */
