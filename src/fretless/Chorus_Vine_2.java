@@ -25,16 +25,16 @@ import fretless.TunePadLogic.*;
  */
 
 /* ************************************************************************************************************************ */
-public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* .Playable_Drawable */
+public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.IDropBox {/* .Playable_Drawable */
 
   double octave, frequency;
   public String MyName = "None";
-  Dictionary<Wave.Playable, Note_Box> backlist;// maps playable children back to their note_box containers
+  Dictionary<Wave.IPlayable, Note_Box> backlist;// maps playable children back to their note_box containers
     /* ************************************************************************************************************************ */
   public Chorus_Vine_2() {
     this.Loudness_S(0.0, 1.0);
     this.Loudness_S(1.0, 1.0);
-    backlist = new Hashtable<Wave.Playable, Note_Box>();
+    backlist = new Hashtable<Wave.IPlayable, Note_Box>();
   }
   /* ************************************************************************************************************************ */
   public void Add_Note(Wave.IPlayable freshnote, double Time, double Pitch) {
@@ -98,7 +98,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
   }
   /* ************************************************************************************************************************ */
   public void Remove_All_Notes() {
-    backlist = new Hashtable<Wave.Playable, Note_Box>();
+    backlist = new Hashtable<>();
     this.clear();
     Update_Duration();
   }
@@ -236,14 +236,6 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
   }
   /* ************************************************************************************************************************ */
   @Override
-  public void Render_Audio_Start(TunePadLogic.Render_Context rc) {
-  }// stateful rendering
-    /* ************************************************************************************************************************ */
-  @Override
-  public void Render_Audio_To(double Hasta, TunePadLogic.Wave_Carrier Wave) {
-  }
-  /* ************************************************************************************************************************ */
-  @Override
   public double End_Time_G() {
     return this.Start_Time_G() + this.Duration_G();
   }
@@ -252,95 +244,61 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
   double Radius = 5;
   double Diameter = Radius * 2.0;
   @Override
-  public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Hit_Stack Stack) {
+  public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack) {
     /* Chorus_Vine  */
-    Wave.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
-    Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
-
+    Point2D scrpnt = dc.To_Screen(dc.Absolute_XForm.Start_Time, dc.Absolute_XForm.Octave);
+    // look for child hits first
     Boolean found = false;
     int Child_Depth = Depth + 1;
     for (int cnt = 0; cnt < this.size(); cnt++) {
-      Wave.Playable Child = this.get(cnt).MyPlayable;
-      if (Child.Hit_Test_Stack(mydc, Xloc, Yloc, Child_Depth, Stack)) {
+      Wave.Transformer TChild = this.get(cnt);
+      if (TChild.Hit_Test_Stack(dc, Xloc, Yloc, Child_Depth, Stack)) {
         found = true;
         break;
       }
     }
-    if (found) {/* child hit preempts hitting me */
-      Stack.Set(Depth, this);
-    } else if (Math.hypot(Xloc - scrpnt.getX(), Yloc - scrpnt.getY()) <= this.Radius) {
-      Stack.Init(Depth + 1);
-      Stack.Set(Depth, this);
-      //this.Diameter = 2.0 * (this.Radius = 10.0);
-      found = true;
+    if (!found) {/* child hit preempts hitting me */
+      if (Math.hypot(Xloc - scrpnt.getX(), Yloc - scrpnt.getY()) <= this.Radius) {
+        Stack.Init(Depth + 1);// terminate stack
+        //this.Diameter = 2.0 * (this.Radius = 10.0);
+        found = true;
+      }
     }
     return found;
   }
   /* ************************************************************************************************************************ */
   @Override
-  public Boolean Hit_Test_Container(TunePadLogic.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+  public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Target_Container_Stack Stack) {
     /* Chorus_Vine  */
-    TunePadLogic.Drawing_Context mydc = new TunePadLogic.Drawing_Context(dc, this);
-    Point2D scrpnt = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+    Point2D scrpnt = dc.To_Screen(dc.Absolute_XForm.Start_Time, dc.Absolute_XForm.Octave);
     double Line_Radius = 5.0;
     Boolean linehit = false;
     Boolean found = false;
     int Child_Depth = Depth + 1;
     for (int cnt = 0; cnt < this.size(); cnt++) {
-      Wave.Playable Child = this.get(cnt).MyPlayable;
-      if (Child.Hit_Test_Container(mydc, Xloc, Yloc, Child_Depth, Stack)) {
+      Wave.Transformer TChild = this.get(cnt);
+      if (TChild.Hit_Test_Container(dc, Xloc, Yloc, Child_Depth, Stack)) {
         found = true;
         break;
       }
     }
     if (found) {/* child hit preempts hitting me */
-      Stack.Set(Depth, this);
+
     } else if (Math.hypot(Xloc - scrpnt.getX(), Yloc - scrpnt.getY()) <= this.Radius) {
       Stack.Init(Depth + 1);/* we hit me directly */
-      Stack.Set(Depth, this);
       Stack.DropBox_Found = this;
       found = true;
     } else {
       // look for line hit here.
-
-      /*
-       *  no matter what, when we hit a container we hit its line.  if we hit the handle of the container, we have just hit
-       * the start of the very first line.
-       * so maybe we look for line-hittiness first?  or handle-hit first?
-       *
-       * possible containers:
-       * vine (me), repeatbox/vine, temposcale/vine, shear notebender?
-       *
-       * the issues with a repeatbox, temposcale or notebender are that each needs a handle unrelated to the end of the last note.
-       *each can have a line that extends beyond the end of the last note, yes?  but it will look like a note and be confusing.
-       * extended line in a repeater is ok because the child goes on forever.
-       *
-       * maybe the extended line of a temposcale will be a different color, with a different symbol at the end.
-       *
-       * and a notebender?  same as a temposcale really, may as well use a special line for that too.  maybe the same as with temposcale.
-       *
-       *
-       * OK the next priority is perhaps animation while playing?  Highlight each note as it sounds.
-       * so how were we supposed to do that?  render the audio in stripes.  but how to know when each note begins?  gotta rethink this.
-       *
-       * so: animate during play, and allow drag and drop.  dnd between containers, within a container.
-       *
-       * dnd with ampvelopes is not really dnd.  it is just moving, no migration.  
-       *
-       * dnd is a matter of 1. animate moving object, and 2. relocate object once dropped.
-       *
-       * any way to prevent play-click from being mistaken for drag?  maybe cntrl-click-drag is for moving?
-       *
-       */
       {
-        int xprev, yprev, xloc, yloc;
+        int xprev, yprev;
 
         Point2D.Double pnt = new Point2D.Double(Xloc, Yloc);
 
         Line2D.Double lin = new Line2D.Double();
         Point2D.Double hitpnt = new Point2D.Double();
 
-        Point2D.Double loc = mydc.To_Screen(mydc.Absolute_X, mydc.Absolute_Y);
+        Point2D.Double loc = dc.To_Screen(dc.Absolute_XForm.Start_Time, dc.Absolute_XForm.Octave);
 
         xprev = (int) loc.x;
         yprev = (int) loc.y;
@@ -348,13 +306,12 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
         for (int cnt = 0; cnt < this.size(); cnt++) {
           Note_Box child = this.get(cnt);
 
-          loc = mydc.To_Screen(mydc.Absolute_X + child.Start_Time_G(), (mydc.Absolute_Y + child.Octave_G()));
+          loc = dc.To_Screen(dc.Absolute_XForm.Start_Time + child.Start_Time_G(), (dc.Absolute_XForm.Octave + child.Octave_G()));
 
           lin.setLine(xprev, yprev, loc.x, loc.y);
           linehit = TunePadLogic.Hit_Test_Line(pnt, lin, Line_Radius, hitpnt);
           if (linehit) {
             Stack.Init(Depth + 1);
-            Stack.Set(Depth, this);
             Stack.DropBox_Found = this;
             break;
           }
@@ -372,10 +329,6 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
   @Override
   public double Duration_G() {
     return this.Duration_Val;
-  }
-  @Override
-  public void Duration_S(double value) {
-    this.Duration_Val = value;
   }
   public double Octave_G() {
     return octave;
@@ -468,11 +421,7 @@ public class Chorus_Vine_2 extends Note_List_Base_2 implements Wave.DropBox {/* 
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   @Override
-  public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-  @Override
-  public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Target_Container_Stack Stack) {
+  public Wave.CursorBase Launch_Cursor(Wave.Drawing_Context dc) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 }
@@ -566,7 +515,7 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
     }
     /* ************************************************************************************************************************ */
     @Override
-    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Target_Container_Stack Stack) {
       /* Note_Box  */
       Wave.Drawing_Context mydc = new Wave.Drawing_Context(dc, this);
       Boolean found = this.MyPlayable.Hit_Test_Container(mydc, Xloc, Yloc, Depth + 1, Stack);
@@ -639,7 +588,8 @@ class Note_List_Base_2 extends ArrayList<Note_List_Base_2.Note_Box> {
       Point2D.Double pnt = mydc.To_Screen(mydc.Absolute_XForm.Start_Time, mydc.Absolute_XForm.Octave);
       mydc.gr.fillOval((int) (pnt.x) - 5, (int) (pnt.y) - 5, 10, 10);
       //mydc.gr.fillOval((int) (mydc.Absolute_X * xscale) - 5, (int) (mydc.Absolute_Y * yscale) - 5, 10, 10);
-      this.MyPlayable.Draw_Me(mydc);
+      Wave.CursorBase cb = this.MyPlayable.Launch_Cursor(dc);
+      cb.Draw_Next_Chunk(dc);
     }
     /* ************************************************************************************************************************ */
     public Note_Box Xerox_Me_Typed() {

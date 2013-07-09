@@ -7,6 +7,7 @@ import fretless.TunePadLogic.Transformer;
 import static fretless.TunePadLogic.TwoPi;
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -91,13 +92,21 @@ public class Wave {
     /* **************************************************************************** */
     @Override
     public Boolean Hit_Test_Stack(Drawing_Context dc, double Xloc, double Yloc, int Depth, Hit_Stack Stack) {
-      Drawing_Context dc1 = new Drawing_Context(dc, this);
-      return this.MyPlayable.Hit_Test_Stack(dc1, Xloc, Yloc, Depth, Stack);
+      Wave.Drawing_Context dc1 = new Wave.Drawing_Context(dc, this);
+      boolean found = this.MyPlayable.Hit_Test_Stack(dc1, Xloc, Yloc, Depth, Stack);
+      if (found) {
+        Stack.Set(Depth, this);
+      }
+      return found;
     }
     @Override
-    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+    public Boolean Hit_Test_Container(Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Target_Container_Stack Stack) {
       Drawing_Context dc1 = new Drawing_Context(dc, this);
-      return this.MyPlayable.Hit_Test_Container(dc1, Xloc, Yloc, Depth, Stack);
+      boolean found = this.MyPlayable.Hit_Test_Container(dc1, Xloc, Yloc, Depth, Stack);
+      if (found) {
+        Stack.Set(Depth, this);
+      }
+      return found;
     }
   };
   /* **************************************************************************** */
@@ -140,6 +149,7 @@ public class Wave {
   /* **************************************************************************** */
   public final static class Drawing_Context {
     public Transformer Absolute_XForm;
+    public Graphics2D gr;
     public Drawing_Context() {
       Absolute_XForm = new Transformer();
     }
@@ -187,22 +197,25 @@ public class Wave {
     CursorBase MyParent;
     public double currentT; // and whatever state info
     /* **************************************************************************** */
-    void LoadParentCursor(CursorBase Parent) {// virtual
+    public void LoadParentCursor(CursorBase Parent) {// virtual
       //MyPlayable = Playable0;
       MyParent = Parent;
       MyRC = Parent.MyRC;
     }
     /* **************************************************************************** */
-    void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {
+    public void GetNextChunk(double TNext, TunePadLogic.Wave_Carrier buf) {
     }
+    /* **************************************************************************** */
+    public void Draw_Next_Chunk(Drawing_Context dc) {
+    }// Draw_Me? 
   }
   /* ************************************************************************************************************************ */
   public interface IHittable {
     public Boolean Hit_Test_Stack(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Hit_Stack Stack);
-    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack);
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Target_Container_Stack Stack);
   }
   /* ************************************************************************************************************************ */
-  public interface DropBox extends Wave.IPlayable {/* Anything that can receive an object in drag and drop. */
+  public interface IDropBox extends Wave.IPlayable {/* Anything that can receive an object in drag and drop. */
 
     void Container_Insert(Playable NewChild, double Time, double Pitch);
   }
@@ -215,6 +228,8 @@ public class Wave {
     double Get_Max_Amplitude();
     /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc); // from start, t0 not supported
+    /* **************************************************************************** */
+    CursorBase Launch_Cursor(Wave.Drawing_Context dc); // from start, t0 not supported
     /* **************************************************************************** */
     CursorBase Launch_Cursor(Render_Context rc, double t0);
     /* **************************************************************************** */
@@ -264,7 +279,7 @@ public class Wave {
       return false;
     }
     // virtual
-    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, TunePadLogic.Target_Container_Stack Stack) {
+    public Boolean Hit_Test_Container(Wave.Drawing_Context dc, double Xloc, double Yloc, int Depth, Wave.Target_Container_Stack Stack) {
       return false;
     }
     /* **************************************************************************** */
@@ -277,12 +292,22 @@ public class Wave {
       return new Cursor(this, rc);
     }
     /* **************************************************************************** */
+    @Override
+    public CursorBase Launch_Cursor(Wave.Drawing_Context dc) {
+      return new Cursor(this, dc);
+    }
+    /* **************************************************************************** */
     public class Cursor extends CursorBase // MyCursor
     {
       /* **************************************************************************** */
       public Cursor(Playable Playable0, Render_Context MyRC0) {
         this.MyPlayable = Playable.this;//MyPlayable = Playable0;
         MyRC = MyRC0;
+      }
+      /* **************************************************************************** */
+      public Cursor(Playable Playable0, Wave.Drawing_Context MyRC0) {// snox, get rid of this
+        this.MyPlayable = Playable.this;//MyPlayable = Playable0;
+        //MyRC = MyRC0;
       }
       /* **************************************************************************** */
       @Override
@@ -481,7 +506,7 @@ public class Wave {
   public static class Hit_Stack {
     public int Stack_Depth;
     Transformer[] Path;
-    public void Init(int Depth) {
+    public void Init(int Depth) {// rename this to 'Terminate'
       Stack_Depth = Depth;
       Path = new Transformer[Depth];
     }
@@ -538,5 +563,9 @@ public class Wave {
       }
       return retval;
     }
+  }
+  /* ************************************************************************************************************************ */
+  public static class Target_Container_Stack extends Wave.Hit_Stack {
+    public IDropBox DropBox_Found;
   }
 }
